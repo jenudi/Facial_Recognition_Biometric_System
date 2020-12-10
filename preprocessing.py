@@ -66,12 +66,9 @@ def poisson_noise(image):
     return np.random.poisson(image * vals) / float(vals)
 
 def add_noise(image):
-#   noises={0:identity_filter, 1:salt_and_paper_noise, 2:gaussian_noise,
-#            3:poisson_noise}
-#    return noises[random.randint(0,3)](image)
-    noises={0:identity_filter, 1:salt_and_paper_noise, 2:gaussian_noise}
-    return noises[random.randint(0,2)](image)
-
+   noises={0:identity_filter, 1:salt_and_paper_noise, 2:gaussian_noise,
+            3:poisson_noise}
+   return noises[random.randint(0,3)](image)
 
 def preprocessing_for_augmantation(image):
     image=cv.cvtColor(image, cv.COLOR_BGR2RGB)
