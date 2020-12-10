@@ -66,9 +66,12 @@ def poisson_noise(image):
     return np.random.poisson(image * vals) / float(vals)
 
 def add_noise(image):
-   noises={0:identity_filter, 1:salt_and_paper_noise, 2:gaussian_noise,
-            3:poisson_noise}
-   return noises[random.randint(0,3)](image)
+   #noises={0:identity_filter, 1:salt_and_paper_noise, 2:gaussian_noise,
+            #3:poisson_noise}
+   #return noises[random.randint(0,3)](image)
+    noises={0:identity_filter, 1:salt_and_paper_noise, 2:gaussian_noise}
+    return noises[random.randint(0,2)](image)
+
 
 def preprocessing_for_augmantation(image):
     image=cv.cvtColor(image, cv.COLOR_BGR2RGB)
@@ -91,9 +94,8 @@ datagen = keras.preprocessing.image.ImageDataGenerator(
     width_shift_range = 0.2,
     height_shift_range = 0.2,
     horizontal_flip = True,
-    fill_mode = 'reflect',
-    preprocessing_function=preprocessing_for_augmantation) #may also try nearest, constant, reflect, wrap. when using 'constant' we should add 'cval' value of 125
-
+    fill_mode = 'reflect', #may also try nearest, constant, reflect, wrap. when using 'constant' we should add 'cval' value of 125
+    preprocessing_function=preprocessing_for_augmantation)
 
 
 
@@ -171,7 +173,6 @@ os.chdir(train_dir)
 train_directories = [dir for dir in os.listdir(train_dir) if not '.' in dir]
 
 train_images=[]
-number_of_train_images=0
 
 for dir in train_directories:
     files = os.listdir(train_dir + '/' + dir)
@@ -180,7 +181,6 @@ for dir in train_directories:
     for image_name in images:
         image = cv.imread(train_dir + '/' + dir + '/' + image_name)
         train_images.append(cv.resize(image, (256,256)))
-        number_of_train_images+=1
 
 train_images_mean=np.mean(train_images,axis=(0,1,2))
 train_images_std=np.std(train_images,axis=(0,1,2))
