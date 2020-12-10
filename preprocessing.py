@@ -1,17 +1,14 @@
 import cv2 as cv
-from google.colab.patches import cv2_imshow
-import tensorflow as tf
 import keras
 import numpy as np
 import os #enables getting file names from directory
-from PIL import Image #we may also use skimage
-from skimage import io #enables reading a single image
 import random
-import dlib
-import os
-
+#from PIL import Image #we may also use skimage
+#from skimage import io #enables reading a single image
+#import dlib
 #import face_recognition #run this only after installing dlib and face_recognition (above code)
-#import importlib
+#import tensorflow as tf
+
 
 
 
@@ -69,24 +66,22 @@ def poisson_noise(image):
     return np.random.poisson(image * vals) / float(vals)
 
 def add_noise(image):
-    noises={0:identity_filter, 1:salt_and_paper_noise, 2:gaussian_noise,
-            3:poisson_noise}
-    return noises[random.randint(0,3)](image)
+#   noises={0:identity_filter, 1:salt_and_paper_noise, 2:gaussian_noise,
+#            3:poisson_noise}
+#    return noises[random.randint(0,3)](image)
+    noises={0:identity_filter, 1:salt_and_paper_noise, 2:gaussian_noise}
+    return noises[random.randint(0,2)](image)
 
 
-
-def preprocessing_for_train(image):
-    image=cv.resize(image, (256,256))
+def preprocessing_for_augmantation(image):
     image=cv.cvtColor(image, cv.COLOR_BGR2RGB)
     image=add_filter(image)
     image=add_noise(image)
     return image
 
-def preprocessing_for_val_and_test(image):
+def preprocessing_for_train_val_and_test(image):
     image=cv.resize(image, (256,256))
-    image=cv.cvtColor(image, cv.COLOR_BGR2RGB)
     return image
-
 
 
 
@@ -100,95 +95,135 @@ datagen = keras.preprocessing.image.ImageDataGenerator(
     height_shift_range = 0.2,
     horizontal_flip = True,
     fill_mode = 'reflect',
-    preprocessing_function=preprocessing_for_train) #may also try nearest, constant, reflect, wrap. when using 'constant' we should add 'cval' value of 125
-
-
-
-root_dir = '/content'
-train_dir = root_dir + '/train'
-os.chdir(train_dir)
-directories = os.listdir(train_dir)
-if os.path.exists(train_dir + '/.ipynb_checkpoints'):
-    directories.remove('.ipynb_checkpoints')
-
-images_sum = np.zeros((256, 256, 3))
-num_of_train_images = 0
-images = {}
-
-for dir in directories:
-    files = os.listdir(train_dir + '/' + dir)
-    files_formats = [file.split('.') for file in files]
-    images[dir] = ['.'.join(file_format) for file_format in files_formats if file_format[1] in ['jpg', 'jpeg', 'png']]
-
-    if len(images[dir]) == 0:
-        continue
-
-    if len(images[dir]) in [1, 2, 3]:
-        image = cv.imread(train_dir + '/' + dir + '/' + images[dir][0])
-        image = cv.resize(image, (256, 256))
-        images_sum += image
-        num_of_train_images += 1
-
-    else:
-        for image_name in images[dir]:
-            image = cv.imread(train_dir + '/' + dir + '/' + image_name)
-            image = cv.resize(image, (256, 256))
-            images_sum += image
-            num_of_train_images += 1
+    preprocessing_function=preprocessing_for_augmantation) #may also try nearest, constant, reflect, wrap. when using 'constant' we should add 'cval' value of 125
 
 
 
 
+dataset_dir = 'C:/Users/gash5/Desktop/dataset'
+os.chdir(dataset_dir)
+directories = [dir for dir in os.listdir(dataset_dir) if not '.' in dir]
 
-root_dir = '/content'
-train_dir = root_dir + '/train'
-validation_dir = root_dir + '/validation'
-test_dir = root_dir + '/test'
-os.chdir(train_dir)
-
+train_dir = dataset_dir + '/train'
+validation_dir = dataset_dir + '/validation'
+test_dir = dataset_dir + '/test'
+if not os.path.isdir(train_dir):
+    os.mkdir(train_dir)
 if not os.path.isdir(validation_dir):
     os.mkdir(validation_dir)
 if not os.path.isdir(test_dir):
     os.mkdir(test_dir)
 
-directories = os.listdir(train_dir)
-if os.path.exists(train_dir + '/.ipynb_checkpoints'):
-    directories.remove('.ipynb_checkpoints')
-
 for dir in directories:
-    files = os.listdir(train_dir + '/' + dir)
-    files_formats = [file.split('.') for file in files]
+    files = os.listdir(dataset_dir + '/' + dir)
+    files_formats = [file.split('.') for file in files if len(file.split('.'))==2]
     images = ['.'.join(file_format) for file_format in files_formats if file_format[1] in ['jpg', 'jpeg', 'png']]
 
-    if len(images) == 0:
+    if len(images)<3:
         continue
 
+    if not os.path.isdir(train_dir + '/' + dir):
+        os.mkdir(train_dir + '/' + dir)
+
+    validation_set = []
+    test_set = []
+    if len(images)==3:
+        train_set=images
+    elif len(images)==4:
+        train_set=images[:-1]
+        validation_set.append(images[-1])
+    elif len(images)>4:
+        train_set=images[:-2]
+        validation_set.append(images[-2])
+        test_set.append(images[-1])
+
+    for image_name in train_set:
+        image = cv.imread(dataset_dir + '/' + dir + '/' + image_name)
+        image_save=preprocessing_for_train_val_and_test(image)
+        cv.imwrite(train_dir + '/' + dir + '/' + image_name, image_save)
+
+        image_for_aug = image_save.reshape((1,) + image_save.shape)
+        i=0
+        for batch in datagen.flow(image_for_aug,
+                                    batch_size=5,
+                                    save_to_dir=train_dir + '/' + dir,
+                                    save_prefix='aug',
+                                    save_format='jpg'):
+            i += 1
+            if i == 5:
+                break
+
+    for image_name in validation_set:
+        if not os.path.isdir(validation_dir + '/' + dir):
+            os.mkdir(validation_dir + '/' + dir)
+        image = cv.imread(dataset_dir + '/' + dir + '/' + image_name)
+        image_save = preprocessing_for_train_val_and_test(image)
+        cv.imwrite(validation_dir + '/' + dir + '/' + image_name, image_save)
+
+    for image_name in test_set:
+        if not os.path.isdir(test_dir + '/' + dir):
+            os.mkdir(test_dir + '/' + dir)
+        image = cv.imread(dataset_dir + '/' + dir + '/' + image_name)
+        image_save = preprocessing_for_train_val_and_test(image)
+        cv.imwrite(test_dir + '/' + dir + '/' + image_name, image_save)
+
+
+
+
+os.chdir(train_dir)
+train_directories = [dir for dir in os.listdir(train_dir) if not '.' in dir]
+
+train_images=[]
+number_of_train_images=0
+
+for dir in train_directories:
+    files = os.listdir(train_dir + '/' + dir)
+    files_formats = [file.split('.') for file in files if len(file.split('.'))==2]
+    images = ['.'.join(file_format) for file_format in files_formats if file_format[1] in ['jpg', 'jpeg', 'png']]
     for image_name in images:
-
         image = cv.imread(train_dir + '/' + dir + '/' + image_name)
+        train_images.append(cv.resize(image, (256,256)))
+        number_of_train_images+=1
 
-        if (len(images) == 1) or (len(images) == 2 and os.path.isdir(validation_dir + '/' + dir)) or (
-        os.path.isdir(test_dir + '/' + dir)):
+train_images_mean=np.mean(train_images,axis=(0,1,2))
+train_images_std=np.std(train_images,axis=(0,1,2))
 
-            image = image.reshape((1,) + image.shape)
-            i, j = 0, 0
-            for batch in datagen.flow(image,
-                                      batch_size=5,
-                                      save_to_dir=train_dir + '/' + dir,
-                                      save_prefix='aug',
-                                      save_format='jpg'):
-                i += 1
-                if i == 5:
-                    break
 
-        elif len(images) > 1:
-            image = preprocessing_for_val_and_test(image)
-            os.remove(train_dir + '/' + dir + '/' + image_name)
+validation_directories = [dir for dir in os.listdir(validation_dir) if not '.' in dir]
+test_directories = [dir for dir in os.listdir(test_dir) if not '.' in dir]
 
-            if not os.path.isdir(validation_dir + '/' + dir):
-                os.mkdir(validation_dir + '/' + dir)
-                cv.imwrite(validation_dir + '/' + dir + '/' + 'val_' + image_name, image)
+for dir in train_directories:
+    if not os.path.isdir(train_dir + '/' + dir + '/' + 'images_for_cnn'):
+        os.mkdir(train_dir + '/' + dir + '/' + 'images_for_cnn')
+    files = os.listdir(train_dir + '/' + dir)
+    files_formats = [file.split('.') for file in files if len(file.split('.'))==2]
+    images = ['.'.join(file_format) for file_format in files_formats if file_format[1] in ['jpg', 'jpeg', 'png']]
 
-            elif not os.path.isdir(test_dir + '/' + dir):
-                os.mkdir(test_dir + '/' + dir)
-                cv.imwrite(test_dir + '/' + dir + '/' + 'test_' + image_name, image)
+    for image_name in images:
+        image = cv.imread(train_dir + '/' + dir + '/' + image_name)
+        image_save = (image-train_images_mean)/train_images_std
+        cv.imwrite(train_dir + '/' + dir + '/' + 'images_for_cnn'  + '/' + image_name , image_save)
+
+for dir in validation_directories:
+    if not os.path.isdir(validation_dir + '/' + dir + '/' + 'images_for_cnn'):
+        os.mkdir(validation_dir + '/' + dir + '/' + 'images_for_cnn')
+    files = os.listdir(validation_dir + '/' + dir)
+    files_formats = [file.split('.') for file in files if len(file.split('.'))==2]
+    images = ['.'.join(file_format) for file_format in files_formats if file_format[1] in ['jpg', 'jpeg', 'png']]
+
+    for image_name in images:
+        image = cv.imread(validation_dir + '/' + dir + '/' + image_name)
+        image_save = (image-train_images_mean)/train_images_std
+        cv.imwrite(validation_dir + '/' + dir + '/' + 'images_for_cnn' + '/' + image_name, image_save)
+
+for dir in test_directories:
+    if not os.path.isdir(test_dir + '/' + dir + '/' + 'images_for_cnn'):
+        os.mkdir(test_dir + '/' + dir + '/' + 'images_for_cnn')
+    files = os.listdir(test_dir + '/' + dir)
+    files_formats = [file.split('.') for file in files if len(file.split('.'))==2]
+    images = ['.'.join(file_format) for file_format in files_formats if file_format[1] in ['jpg', 'jpeg', 'png']]
+
+    for image_name in images:
+        image = cv.imread(test_dir + '/' + dir + '/' + image_name)
+        image_save = (image-train_images_mean)/train_images_std
+        cv.imwrite(test_dir + '/' + dir + '/' + 'images_for_cnn' + '/' + image_name, image_save)
