@@ -40,7 +40,6 @@ class image:
 
 #all the train set images are saved in a list which is a class variable. this list is used in order or extract the mean and std of the
 #train set images for normalization for the rest of the images
-
 class train_image(image):
 
     train_list=[]
@@ -88,7 +87,6 @@ class test_image(image):
 
 
 #filters and noise are randomly added to the augmentation images.
-
 def identity_filter(image):
   kernel = np.array([[0, 0, 0], [0, 1, 0], [0, 0, 0]])
   return cv.filter2D(image, -1, kernel)
