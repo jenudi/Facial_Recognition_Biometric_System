@@ -245,7 +245,6 @@ for dir in directories:
 
 #all the images in the train, validation and test sets go through normalization. they are saved in a list and a new directory is formed for them.
 #the normalization type is standartization that is done by substracting the train set mean and dividing by the train set std.
-
 train_directories = [dir for dir in os.listdir(train_dir) if not '.' in dir]
 
 train_norm=[]
