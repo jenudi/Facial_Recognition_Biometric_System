@@ -3,6 +3,7 @@ import keras
 import numpy as np
 import os #enables getting file names from directory
 import random
+import copy
 #from PIL import Image #we may also use skimage
 #from skimage import io #enables reading a single image
 #import dlib
@@ -10,8 +11,83 @@ import random
 #import tensorflow as tf
 
 
+#classes for train set images, validation set images and test set images
+class image:
+
+    def __init__(self,path):
+        self.values=cv.imread(path)
+        self.path=path
+        self.dir=self.path.split('/')[-2]
+        self.person=(' ').join(self.dir.split('_'))
+        self.file_name=self.path.split('/')[-1]
+        self.in_db=False
+        self.set=None
+
+    def save(self,new_path,remove_old=False):
+        if remove_old:
+            os.remove(self.path)
+        self.path=new_path
+        cv.imwrite(self.path,self.values)
+
+    def update_in_db(self,in_db):
+        self.in_db=in_db
+
+    def update_set(self,set):
+        self.set=set
+
+    def preprocess(self):
+        self.values = cv.resize(self.values, (256, 256))
+
+#all the train set images are saved in a list which is a class variable. this list is used in order or extract the mean and std of the
+#train set images for normalization for the rest of the images
+
+class train_image(image):
+
+    train_list=[]
+
+    def __init__(self,path):
+        image.__init__(self,path)
+
+        train_image.train_list.append(self)
+
+    @classmethod
+    def get_train_mean(cls):
+        if len(cls.train_list)>0:
+            return np.mean([train_im.values for train_im in cls.train_list],axis=(0,1,2))
+        else:
+            raise ValueError("No train images.")
+
+    @classmethod
+    def get_train_std(cls):
+        if len(cls.train_list)>0:
+            return np.std([train_im.values for train_im in cls.train_list],axis=(0,1,2))
+        else:
+            raise ValueError("No train images.")
 
 
+class validation_image(image):
+
+    validation_list=[]
+
+    def __init__(self,path):
+        image.__init__(self,path)
+
+        validation_image.validation_list.append(self)
+
+
+class test_image(image):
+
+    test_list=[]
+
+    def __init__(self,path):
+        image.__init__(self,path)
+
+        test_image.test_list.append(self)
+
+
+
+
+#filters and noise are randomly added to the augmentation images.
 
 def identity_filter(image):
   kernel = np.array([[0, 0, 0], [0, 1, 0], [0, 0, 0]])
@@ -79,10 +155,6 @@ def preprocessing_for_augmantation(image):
     image=add_noise(image)
     return image
 
-def preprocessing_for_train_val_and_test(image):
-    image=cv.resize(image, (256,256))
-    return image
-
 
 
 datagen = keras.preprocessing.image.ImageDataGenerator(
@@ -101,8 +173,9 @@ datagen = keras.preprocessing.image.ImageDataGenerator(
 
 dataset_dir = 'C:/Users/gash5/Desktop/dataset'
 os.chdir(dataset_dir)
-directories = [dir for dir in os.listdir(dataset_dir) if not '.' in dir]
+directories = [dir for dir in os.listdir(dataset_dir) if not '.' in dir] #directories contain all the people that have images in the dataset
 
+#new direstories are being made for the train, validation and test sets
 train_dir = dataset_dir + '/train'
 validation_dir = dataset_dir + '/validation'
 test_dir = dataset_dir + '/test'
@@ -115,12 +188,13 @@ if not os.path.isdir(test_dir):
 
 for dir in directories:
     files = os.listdir(dataset_dir + '/' + dir)
-    files_formats = [file.split('.') for file in files if len(file.split('.'))==2]
-    images = ['.'.join(file_format) for file_format in files_formats if file_format[1] in ['jpg', 'jpeg', 'png']]
-
+    images=[file for file in files if ((len(file.split('.')) == 2) and (file.split('.')[1] in ['jpg', 'jpeg', 'png']))] #contains all the images of the person in the current directory
     if len(images)<3:
         continue
 
+    #if the person has at least 3 images he will be put in the train set.
+    #if a person has 4 images he will he put in the train and validation sets
+    #if a person has more than 4 images he will be put in the train, validation and test sets
     if not os.path.isdir(train_dir + '/' + dir):
         os.mkdir(train_dir + '/' + dir)
 
@@ -136,12 +210,13 @@ for dir in directories:
         validation_set.append(images[-2])
         test_set.append(images[-1])
 
+#every image that goes to the train set generates 5 new augmentad images.
     for image_name in train_set:
-        image = cv.imread(dataset_dir + '/' + dir + '/' + image_name)
-        image_save=preprocessing_for_train_val_and_test(image)
-        cv.imwrite(train_dir + '/' + dir + '/' + image_name, image_save)
+        new_train_image=train_image(dataset_dir + '/' + dir + '/' + image_name)
+        new_train_image.preprocess()
+        new_train_image.save(train_dir + '/' + dir + '/' + image_name)
 
-        image_for_aug = image_save.reshape((1,) + image_save.shape)
+        image_for_aug = new_train_image.values.reshape((1,) + new_train_image.values.shape)
         i=0
         for batch in datagen.flow(image_for_aug,
                                     batch_size=5,
@@ -155,72 +230,61 @@ for dir in directories:
     for image_name in validation_set:
         if not os.path.isdir(validation_dir + '/' + dir):
             os.mkdir(validation_dir + '/' + dir)
-        image = cv.imread(dataset_dir + '/' + dir + '/' + image_name)
-        image_save = preprocessing_for_train_val_and_test(image)
-        cv.imwrite(validation_dir + '/' + dir + '/' + image_name, image_save)
+        new_validation_image = validation_image(dataset_dir + '/' + dir + '/' + image_name)
+        new_validation_image.preprocess()
+        new_validation_image.save(validation_dir + '/' + dir + '/' + image_name)
 
     for image_name in test_set:
         if not os.path.isdir(test_dir + '/' + dir):
             os.mkdir(test_dir + '/' + dir)
-        image = cv.imread(dataset_dir + '/' + dir + '/' + image_name)
-        image_save = preprocessing_for_train_val_and_test(image)
-        cv.imwrite(test_dir + '/' + dir + '/' + image_name, image_save)
+        new_test_image = test_image(dataset_dir + '/' + dir + '/' + image_name)
+        new_test_image.preprocess()
+        new_test_image.save(test_dir + '/' + dir + '/' + image_name)
 
 
 
+#all the images in the train, validation and test sets go through normalization. they are saved in a list and a new directory is formed for them.
+#the normalization type is standartization that is done by substracting the train set mean and dividing by the train set std.
 
-os.chdir(train_dir)
 train_directories = [dir for dir in os.listdir(train_dir) if not '.' in dir]
 
-train_images=[]
+train_norm=[]
+validation_norm=[]
+test_norm=[]
 
 for dir in train_directories:
+    if not os.path.isdir(train_dir + '/' + dir + '/' + 'norm_images'):
+        os.mkdir(train_dir + '/' + dir + '/' + 'norm_images')
     files = os.listdir(train_dir + '/' + dir)
-    files_formats = [file.split('.') for file in files if len(file.split('.'))==2]
-    images = ['.'.join(file_format) for file_format in files_formats if file_format[1] in ['jpg', 'jpeg', 'png']]
-    for image_name in images:
-        image = cv.imread(train_dir + '/' + dir + '/' + image_name)
-        train_images.append(cv.resize(image, (256,256)))
+    images=[file for file in files if ((len(file.split('.'))==2) and (file.split('.')[1] in ['jpg', 'jpeg', 'png']) and file.split('_')[0]=='aug') ]
 
-train_images_mean=np.mean(train_images,axis=(0,1,2))
-train_images_std=np.std(train_images,axis=(0,1,2))
+    for cur_image in images:
+        norm_image=image(train_dir + '/' + dir + '/' + cur_image)
+        norm_image.values = (norm_image.values - train_image.get_train_mean()) / train_image.get_train_std()
+        train_norm.append(norm_image)
+        norm_image.save(train_dir + '/' + dir + '/' + 'norm_images' + '/' + cur_image)
 
+for cur_image in train_image.train_list:
+    if not os.path.isdir(train_dir + '/' + cur_image.dir + '/' + 'norm_images'):
+        os.mkdir(train_dir + '/' + cur_image.dir + '/' + 'norm_images')
+    norm_image=copy.copy(cur_image)
+    norm_image.values = (norm_image.values-train_image.get_train_mean())/train_image.get_train_std()
+    train_norm.append(norm_image)
+    norm_image.save(train_dir + '/' + norm_image.dir + '/' + 'norm_images' + '/' + cur_image.file_name)
 
-validation_directories = [dir for dir in os.listdir(validation_dir) if not '.' in dir]
-test_directories = [dir for dir in os.listdir(test_dir) if not '.' in dir]
+for cur_image in validation_image.validation_list:
+    if not os.path.isdir(validation_dir + '/' + cur_image.dir + '/' + 'norm_images'):
+        os.mkdir(validation_dir + '/' + cur_image.dir + '/' + 'norm_images')
+    norm_image=copy.copy(cur_image)
+    norm_image.values = (norm_image.values-train_image.get_train_mean())/train_image.get_train_std()
+    validation_norm.append(norm_image)
+    norm_image.save(validation_dir + '/' + norm_image.dir + '/' + 'norm_images' + '/' + cur_image.file_name)
 
-for dir in train_directories:
-    if not os.path.isdir(train_dir + '/' + dir + '/' + 'images_for_cnn'):
-        os.mkdir(train_dir + '/' + dir + '/' + 'images_for_cnn')
-    files = os.listdir(train_dir + '/' + dir)
-    files_formats = [file.split('.') for file in files if len(file.split('.'))==2]
-    images = ['.'.join(file_format) for file_format in files_formats if file_format[1] in ['jpg', 'jpeg', 'png']]
+for cur_image in test_image.test_list:
+    if not os.path.isdir(test_dir + '/' + cur_image.dir + '/' + 'norm_images'):
+        os.mkdir(test_dir + '/' + cur_image.dir + '/' + 'norm_images')
+    norm_image=copy.copy(cur_image)
+    norm_image.values = (norm_image.values-train_image.get_train_mean())/train_image.get_train_std()
+    test_norm.append(norm_image)
+    norm_image.save(test_dir + '/' + norm_image.dir + '/' + 'norm_images' + '/' + cur_image.file_name)
 
-    for image_name in images:
-        image = cv.imread(train_dir + '/' + dir + '/' + image_name)
-        image_save = (image-train_images_mean)/train_images_std
-        cv.imwrite(train_dir + '/' + dir + '/' + 'images_for_cnn'  + '/' + image_name , image_save)
-
-for dir in validation_directories:
-    if not os.path.isdir(validation_dir + '/' + dir + '/' + 'images_for_cnn'):
-        os.mkdir(validation_dir + '/' + dir + '/' + 'images_for_cnn')
-    files = os.listdir(validation_dir + '/' + dir)
-    files_formats = [file.split('.') for file in files if len(file.split('.'))==2]
-    images = ['.'.join(file_format) for file_format in files_formats if file_format[1] in ['jpg', 'jpeg', 'png']]
-
-    for image_name in images:
-        image = cv.imread(validation_dir + '/' + dir + '/' + image_name)
-        image_save = (image-train_images_mean)/train_images_std
-        cv.imwrite(validation_dir + '/' + dir + '/' + 'images_for_cnn' + '/' + image_name, image_save)
-
-for dir in test_directories:
-    if not os.path.isdir(test_dir + '/' + dir + '/' + 'images_for_cnn'):
-        os.mkdir(test_dir + '/' + dir + '/' + 'images_for_cnn')
-    files = os.listdir(test_dir + '/' + dir)
-    files_formats = [file.split('.') for file in files if len(file.split('.'))==2]
-    images = ['.'.join(file_format) for file_format in files_formats if file_format[1] in ['jpg', 'jpeg', 'png']]
-
-    for image_name in images:
-        image = cv.imread(test_dir + '/' + dir + '/' + image_name)
-        image_save = (image-train_images_mean)/train_images_std
-        cv.imwrite(test_dir + '/' + dir + '/' + 'images_for_cnn' + '/' + image_name, image_save)
