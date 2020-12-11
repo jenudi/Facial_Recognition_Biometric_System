@@ -86,7 +86,7 @@ class test_image(image):
 
 
 
-#filters and noise are randomly added to the augmentation images.
+#filters and noise are randomly added to the augmentation images
 def identity_filter(image):
   kernel = np.array([[0, 0, 0], [0, 1, 0], [0, 0, 0]])
   return cv.filter2D(image, -1, kernel)
@@ -190,7 +190,7 @@ for dir in directories:
     if len(images)<3:
         continue
 
-    #if the person has at least 3 images he will be put in the train set.
+    #if the person has at least 3 images he will be put in the train set
     #if a person has 4 images he will he put in the train and validation sets
     #if a person has more than 4 images he will be put in the train, validation and test sets
     if not os.path.isdir(train_dir + '/' + dir):
@@ -208,7 +208,7 @@ for dir in directories:
         validation_set.append(images[-2])
         test_set.append(images[-1])
 
-#every image that goes to the train set generates 5 new augmentad images.
+#every image that goes to the train set generates 5 new augmentad images
     for image_name in train_set:
         new_train_image=train_image(dataset_dir + '/' + dir + '/' + image_name)
         new_train_image.preprocess()
@@ -241,8 +241,8 @@ for dir in directories:
 
 
 
-#all the images in the train, validation and test sets go through normalization. they are saved in a list and a new directory is formed for them.
-#the normalization type is standartization that is done by substracting the train set mean and dividing by the train set std.
+#all the images in the train, validation and test sets go through normalization. they are saved in a list and a new directory is formed for them
+#the normalization type is standartization that is done by substracting the train set mean and dividing by the train set std
 train_directories = [dir for dir in os.listdir(train_dir) if not '.' in dir]
 
 train_norm=[]
