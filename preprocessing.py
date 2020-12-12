@@ -4,6 +4,7 @@ import numpy as np
 import os #enables getting file names from directory
 import random
 import copy
+import face_recognition
 #from PIL import Image #we may also use skimage
 #from skimage import io #enables reading a single image
 #import dlib
@@ -21,6 +22,8 @@ class image:
         self.person=(' ').join(self.dir.split('_'))
         self.file_name=self.path.split('/')[-1]
         self.in_db=False
+        self.face=None
+        self.normalized_values=None
 
     def save(self,new_path,remove_old=False):
         if remove_old:
@@ -28,11 +31,21 @@ class image:
         self.path=new_path
         cv.imwrite(self.path,self.values)
 
-    def update_in_db(self,in_db):
-        self.in_db=in_db
+    def detect_face(self):
+        face_loc=face_recognition.face_locations(self.values)
+        try:
+            self.face=self.values[face_loc[0][0]:face_loc[0][1],face_loc[0][3]:face_loc[0][2]]
+        except IndexError:
+            print("No face detected for " + self.person)
+
+    def normalalize(self):
+        self.normalized_values = (self.values - train_image.get_train_mean()) / train_image.get_train_std()
 
     def preprocess(self):
         self.values = cv.resize(self.values, (256, 256))
+
+    def update_in_db(self,in_db):
+        self.in_db=in_db
 
 #all the train set images are saved in a list which is a class variable. this list is used in order or extract the mean and std of the
 #train set images for normalization for the rest of the images
@@ -91,7 +104,6 @@ class test_image(image):
 
 
 
-
 #filters and noise are randomly added to the augmentation images
 def identity_filter(image):
   kernel = np.array([[0, 0, 0], [0, 1, 0], [0, 0, 0]])
@@ -118,7 +130,6 @@ def add_filter(image):
             3:gaussian_filter, 4:median_filter,
             5:bileteral_filter, 6:laplacian_filter}
   return filters[random.randint(0,6)](image)
-
 
 
 
@@ -218,6 +229,7 @@ for dir in directories:
     for image_name in train_set:
         new_train_image=train_image(dataset_dir + '/' + dir + '/' + image_name)
         new_train_image.preprocess()
+        new_train_image.detect_face()
         new_train_image.save(train_dir + '/' + dir + '/' + image_name)
 
         image_for_aug = new_train_image.values.reshape((1,) + new_train_image.values.shape)
@@ -236,6 +248,7 @@ for dir in directories:
             os.mkdir(validation_dir + '/' + dir)
         new_validation_image = validation_image(dataset_dir + '/' + dir + '/' + image_name)
         new_validation_image.preprocess()
+        new_validation_image.detect_face()
         new_validation_image.save(validation_dir + '/' + dir + '/' + image_name)
 
     for image_name in test_set:
@@ -243,50 +256,23 @@ for dir in directories:
             os.mkdir(test_dir + '/' + dir)
         new_test_image = test_image(dataset_dir + '/' + dir + '/' + image_name)
         new_test_image.preprocess()
+        new_test_image.detect_face()
         new_test_image.save(test_dir + '/' + dir + '/' + image_name)
 
 
 
-#all the images in the train, validation and test sets go through normalization. they are saved in a list and a new directory is formed for them
+#all the images in the train, validation and test sets go through normalization
 #the normalization type is standartization that is done by substracting the train set mean and dividing by the train set std
 train_directories = [dir for dir in os.listdir(train_dir) if not '.' in dir]
 
-train_norm=[]
-validation_norm=[]
-test_norm=[]
-
 for dir in train_directories:
-    if not os.path.isdir(train_dir + '/' + dir + '/' + 'norm_images'):
-        os.mkdir(train_dir + '/' + dir + '/' + 'norm_images')
     files = os.listdir(train_dir + '/' + dir)
     images=[file for file in files if ((len(file.split('.'))==2) and (file.split('.')[1] in ['jpg', 'jpeg', 'png']) and file.split('_')[0]=='aug') ]
 
     for cur_image in images:
-        norm_image=augmentation_image(train_dir + '/' + dir + '/' + cur_image)
-        norm_image.values = (norm_image.values - train_image.get_train_mean())/train_image.get_train_std()
-        train_norm.append(norm_image)
-        norm_image.save(train_dir + '/' + dir + '/' + 'norm_images' + '/' + cur_image)
+        new_augmentation_image=augmentation_image(train_dir + '/' + dir + '/' + cur_image)
+        new_augmentation_image.detect_face()
+        new_augmentation_image.normalalize()
 
-for cur_image in train_image.train_list:
-    if not os.path.isdir(train_dir + '/' + cur_image.dir + '/' + 'norm_images'):
-        os.mkdir(train_dir + '/' + cur_image.dir + '/' + 'norm_images')
-    norm_image=copy.copy(cur_image)
-    norm_image.values = (norm_image.values-train_image.get_train_mean())/train_image.get_train_std()
-    train_norm.append(norm_image)
-    norm_image.save(train_dir + '/' + norm_image.dir + '/' + 'norm_images' + '/' + cur_image.file_name)
-
-for cur_image in validation_image.validation_list:
-    if not os.path.isdir(validation_dir + '/' + cur_image.dir + '/' + 'norm_images'):
-        os.mkdir(validation_dir + '/' + cur_image.dir + '/' + 'norm_images')
-    norm_image=copy.copy(cur_image)
-    norm_image.values = (norm_image.values-train_image.get_train_mean())/train_image.get_train_std()
-    validation_norm.append(norm_image)
-    norm_image.save(validation_dir + '/' + norm_image.dir + '/' + 'norm_images' + '/' + cur_image.file_name)
-
-for cur_image in test_image.test_list:
-    if not os.path.isdir(test_dir + '/' + cur_image.dir + '/' + 'norm_images'):
-        os.mkdir(test_dir + '/' + cur_image.dir + '/' + 'norm_images')
-    norm_image=copy.copy(cur_image)
-    norm_image.values = (norm_image.values-train_image.get_train_mean())/train_image.get_train_std()
-    test_norm.append(norm_image)
-    norm_image.save(test_dir + '/' + norm_image.dir + '/' + 'norm_images' + '/' + cur_image.file_name)
+for cur_image in sum([train_image.train_list, validation_image.validation_list, test_image.test_list],[]):
+    cur_image.normalalize()
