@@ -21,7 +21,6 @@ class image:
         self.person=(' ').join(self.dir.split('_'))
         self.file_name=self.path.split('/')[-1]
         self.in_db=False
-        self.set=None
 
     def save(self,new_path,remove_old=False):
         if remove_old:
@@ -31,9 +30,6 @@ class image:
 
     def update_in_db(self,in_db):
         self.in_db=in_db
-
-    def update_set(self,set):
-        self.set=set
 
     def preprocess(self):
         self.values = cv.resize(self.values, (256, 256))
@@ -62,6 +58,16 @@ class train_image(image):
             return np.std([train_im.values for train_im in cls.train_list],axis=(0,1,2))
         else:
             raise ValueError("No train images.")
+
+
+class augmentation_image(image):
+
+    augmentation_list=[]
+
+    def __init__(self,path):
+        image.__init__(self,path)
+
+        augmentation_image.augmentation_list.append(self)
 
 
 class validation_image(image):
@@ -147,7 +153,7 @@ def add_noise(image):
     return noises[random.randint(0,2)](image)
 
 
-def preprocessing_for_augmantation(image):
+def preprocessing_for_augmentation(image):
     image=cv.cvtColor(image, cv.COLOR_BGR2RGB)
     image=add_filter(image)
     image=add_noise(image)
@@ -165,7 +171,7 @@ datagen = keras.preprocessing.image.ImageDataGenerator(
     height_shift_range = 0.2,
     horizontal_flip = True,
     fill_mode = 'reflect', #may also try nearest, constant, reflect, wrap. when using 'constant' we should add 'cval' value of 125
-    preprocessing_function=preprocessing_for_augmantation)
+    preprocessing_function=preprocessing_for_augmentation)
 
 
 
@@ -256,8 +262,8 @@ for dir in train_directories:
     images=[file for file in files if ((len(file.split('.'))==2) and (file.split('.')[1] in ['jpg', 'jpeg', 'png']) and file.split('_')[0]=='aug') ]
 
     for cur_image in images:
-        norm_image=image(train_dir + '/' + dir + '/' + cur_image)
-        norm_image.values = (norm_image.values - train_image.get_train_mean()) / train_image.get_train_std()
+        norm_image=augmentation_image(train_dir + '/' + dir + '/' + cur_image)
+        norm_image.values = (norm_image.values - train_image.get_train_mean())/train_image.get_train_std()
         train_norm.append(norm_image)
         norm_image.save(train_dir + '/' + dir + '/' + 'norm_images' + '/' + cur_image)
 
@@ -284,4 +290,3 @@ for cur_image in test_image.test_list:
     norm_image.values = (norm_image.values-train_image.get_train_mean())/train_image.get_train_std()
     test_norm.append(norm_image)
     norm_image.save(test_dir + '/' + norm_image.dir + '/' + 'norm_images' + '/' + cur_image.file_name)
-
