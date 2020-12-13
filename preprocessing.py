@@ -207,9 +207,9 @@ for dir in directories:
     if len(images)<3:
         continue
 
-    #if the person has at least 3 images he will be put in the train set
-    #if a person has 4 images he will he put in the train and validation sets
-    #if a person has more than 4 images he will be put in the train, validation and test sets
+    #if the person has at least 3 images all the images will be put in the train set
+    #if a person has 4 images all the images except one will he put in the train set and the last one will be put on the validation set
+    #if a person has more than 4 images  all the images except two will he put in the train set and the last two will be put on the validation set and test set
     if not os.path.isdir(train_dir + '/' + dir):
         os.mkdir(train_dir + '/' + dir)
 
@@ -226,6 +226,7 @@ for dir in directories:
         test_set.append(images[-1])
 
 #every image that goes to the train set generates 5 new augmentad images
+#the image face locations are saved by the method face_detect
     for image_name in train_set:
         new_train_image=train_image(dataset_dir + '/' + dir + '/' + image_name)
         new_train_image.preprocess()
@@ -260,11 +261,8 @@ for dir in directories:
         new_test_image.save(test_dir + '/' + dir + '/' + image_name)
 
 
-
-#all the images in the train, validation and test sets go through normalization
-#the normalization type is standartization that is done by substracting the train set mean and dividing by the train set std
+#all the augmented values are collected and go through face detection and normalization like the other images
 train_directories = [dir for dir in os.listdir(train_dir) if not '.' in dir]
-
 for dir in train_directories:
     files = os.listdir(train_dir + '/' + dir)
     images=[file for file in files if ((len(file.split('.'))==2) and (file.split('.')[1] in ['jpg', 'jpeg', 'png']) and file.split('_')[0]=='aug') ]
@@ -274,5 +272,8 @@ for dir in train_directories:
         new_augmentation_image.detect_face()
         new_augmentation_image.normalalize()
 
+#all the images in the train, validation and test sets go through normalization
+#the normalization type is standartization that is done by substracting the train set mean and dividing by the train set STD
+#the normalized values are calculated and saved by the normalize mothod
 for cur_image in sum([train_image.train_list, validation_image.validation_list, test_image.test_list],[]):
     cur_image.normalalize()
