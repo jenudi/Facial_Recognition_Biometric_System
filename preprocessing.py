@@ -232,7 +232,7 @@ for dir in directories:
         test_set.append(images[-1])
 
 #every image that goes to the train set generates 5 new augmentad images
-#the image face locations are saved by the method face_detect
+#the image face locations are saved by the method detect_face
     for image_name in train_set:
         new_train_image=train_image(dataset_dir + '/' + dir + '/' + image_name)
         new_train_image.preprocess()
@@ -328,16 +328,14 @@ for cur_image in test_image.test_list:
     else:
         no_faces.append(cur_image)
 
+if not os.path.isdir(dataset_dir + '/' + 'no_faces_detected'):
+    os.mkdir(dataset_dir + '/' + 'no_faces_detected')
 for cur_image in no_faces:
-    cv.imshow(cur_image.values)
-    cv.waitKey(0)
+    cur_image.save(dataset_dir + '/' + 'no_faces_detected')
 
 client = pymongo.MongoClient('mongodb://localhost:27017/')
 with client:
     db = client.biometric_system
-    if len(train_documents)>0:
-        db.faces.insert_many(train_documents)
-    if len(validation_documents)>0:
-        db.faces.insert_many(validation_documents)
-    if len(test_documents)>0:
-        db.faces.insert_many(test_documents)
+    db.faces.insert_many(train_documents)
+    db.faces.insert_many(validation_documents)
+    db.faces.insert_many(test_documents)
