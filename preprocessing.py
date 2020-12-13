@@ -38,7 +38,7 @@ class image:
         except IndexError:
             print("No face detected for " + self.person)
 
-    def normalalize(self):
+    def normalize(self):
         self.normalized_values = (self.values - train_image.get_train_mean()) / train_image.get_train_std()
 
     def preprocess(self):
@@ -270,10 +270,10 @@ for dir in train_directories:
     for cur_image in images:
         new_augmentation_image=augmentation_image(train_dir + '/' + dir + '/' + cur_image)
         new_augmentation_image.detect_face()
-        new_augmentation_image.normalalize()
+        new_augmentation_image.normalize()
 
 #all the images in the train, validation and test sets go through normalization
 #the normalization type is standartization that is done by substracting the train set mean and dividing by the train set STD
 #the normalized values are calculated and saved by the normalize mothod
 for cur_image in sum([train_image.train_list, validation_image.validation_list, test_image.test_list],[]):
-    cur_image.normalalize()
+    cur_image.normalize()
