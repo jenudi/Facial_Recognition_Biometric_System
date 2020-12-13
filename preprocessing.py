@@ -212,7 +212,8 @@ for dir in directories:
     if len(images)<3:
         continue
 
-    #if the person has at least 3 images all the images will be put in the train set
+    # if a person has less than 3 images he will not be part of any set
+    #if a person has 3 images all the images will be put in the train set
     #if a person has 4 images all the images except one will he put in the train set and the last one will be put on the validation set
     #if a person has more than 4 images  all the images except two will he put in the train set and the last two will be put on the validation set and test set
     if not os.path.isdir(train_dir + '/' + dir):
