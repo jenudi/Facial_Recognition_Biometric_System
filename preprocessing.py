@@ -323,6 +323,9 @@ for cur_image in test_image.test_list:
 client = pymongo.MongoClient('mongodb://localhost:27017/')
 with client:
     db = client.biometric_system
-    db.faces.insert_many(train_documents)
-    db.faces.insert_many(validation_documents)
-    db.faces.insert_many(test_documents)
+    if len(train_documents)>0:
+        db.faces.insert_many(train_documents)
+    if len(validation_documents)>0:
+        db.faces.insert_many(validation_documents)
+    if len(test_documents)>0:
+        db.faces.insert_many(test_documents)
