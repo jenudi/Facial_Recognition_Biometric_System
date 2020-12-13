@@ -212,7 +212,7 @@ for dir in directories:
     if len(images)<3:
         continue
 
-    # if a person has less than 3 images he will not be part of any set
+    #if a person has less than 3 images he will not be part of any set
     #if a person has 3 images all the images will be put in the train set
     #if a person has 4 images all the images except one will he put in the train set and the last one will be put on the validation set
     #if a person has more than 4 images  all the images except two will he put in the train set and the last two will be put on the validation set and test set
@@ -284,6 +284,7 @@ for dir in train_directories:
 for cur_image in sum([train_image.train_list, validation_image.validation_list, test_image.test_list],[]):
     cur_image.normalize()
 
+no_faces=[]
 #the images the a face have been detected in them are inserted to the database
 train_documents=[]
 for cur_image in sum([train_image.train_list,augmentation_image.augmentation_list],[]):
@@ -296,6 +297,8 @@ for cur_image in sum([train_image.train_list,augmentation_image.augmentation_lis
         "set":"train"
         }))
         cur_image.update_in_db(True)
+    else:
+        no_faces.append(cur_image)
 
 validation_documents=[]
 for cur_image in validation_image.validation_list:
@@ -308,6 +311,8 @@ for cur_image in validation_image.validation_list:
         "set":"validation"
         }))
         cur_image.update_in_db(True)
+    else:
+        no_faces.append(cur_image)
 
 test_documents=[]
 for cur_image in test_image.test_list:
@@ -320,6 +325,12 @@ for cur_image in test_image.test_list:
         "set":"test"
         }))
         cur_image.update_in_db(True)
+    else:
+        no_faces.append(cur_image)
+
+for cur_image in no_faces:
+    cv.imshow(cur_image.values)
+    cv.waitKey(0)
 
 client = pymongo.MongoClient('mongodb://localhost:27017/')
 with client:
