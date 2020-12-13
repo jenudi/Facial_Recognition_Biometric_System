@@ -5,6 +5,8 @@ import os #enables getting file names from directory
 import random
 import copy
 import face_recognition
+from pymongo import MongoClient
+import bson
 #from PIL import Image #we may also use skimage
 #from skimage import io #enables reading a single image
 #import dlib
@@ -22,8 +24,9 @@ class image:
         self.person=(' ').join(self.dir.split('_'))
         self.file_name=self.path.split('/')[-1]
         self.in_db=False
-        self.face=None
-        self.normalized_values=None
+        self.face=[]
+        self.normalized_values=[]
+        self.face_detected=False
 
     def save(self,new_path,remove_old=False):
         if remove_old:
@@ -37,6 +40,8 @@ class image:
             self.face=self.values[face_loc[0][0]:face_loc[0][1],face_loc[0][3]:face_loc[0][2]]
         except IndexError:
             print("No face detected for " + self.person)
+        if len(self.face)>0:
+            self.face_detected=True
 
     def normalize(self):
         self.normalized_values = (self.values - train_image.get_train_mean()) / train_image.get_train_std()
@@ -63,14 +68,14 @@ class train_image(image):
         if len(cls.train_list)>0:
             return np.mean([train_im.values for train_im in cls.train_list],axis=(0,1,2))
         else:
-            raise ValueError("No train images.")
+            raise ValueError("No train images")
 
     @classmethod
     def get_train_std(cls):
         if len(cls.train_list)>0:
             return np.std([train_im.values for train_im in cls.train_list],axis=(0,1,2))
         else:
-            raise ValueError("No train images.")
+            raise ValueError("No train images")
 
 
 class augmentation_image(image):
@@ -277,3 +282,46 @@ for dir in train_directories:
 #the normalized values are calculated and saved by the normalize mothod
 for cur_image in sum([train_image.train_list, validation_image.validation_list, test_image.test_list],[]):
     cur_image.normalize()
+
+train_documents=[]
+for cur_image in sum([train_image.train_list,augmentation_image.augmentation_list],[]):
+    if cur_image.face_detected:
+        train_documents.append(bson.son.SON({
+        "values":cur_image.values.tolist(),
+        "normalized_values":cur_image.normalized_values.tolist(),
+        "face":cur_image.face.tolist(),
+        "path":cur_image.path,
+        "set":"train"
+        }))
+        cur_image.update_in_db(True)
+
+validation_documents=[]
+for cur_image in validation_image.validation_list:
+    if cur_image.face_detected:
+        validation_documents.append(bson.son.SON({
+        "values":cur_image.values.tolist(),
+        "normalized_values":cur_image.normalized_values.tolist(),
+        "face":cur_image.face.tolist(),
+        "path":cur_image.path,
+        "set":"validation"
+        }))
+        cur_image.update_in_db(True)
+
+test_documents=[]
+for cur_image in test_image.test_list:
+    if cur_image.face_detected:
+        test_documents.append(bson.son.SON({
+        "values":cur_image.values.tolist(),
+        "normalized_values":cur_image.normalized_values.tolist(),
+        "face":cur_image.face.tolist(),
+        "path":cur_image.path,
+        "set":"test"
+        }))
+        cur_image.update_in_db(True)
+
+client = MongoClient('mongodb://localhost:27017/')
+with client:
+    db = client.biometric_system
+    db.train_documents.insert_many(train_documents)
+    db.train_documents.insert_many(validation_documents)
+    db.train_documents.insert_many(test_documents)
