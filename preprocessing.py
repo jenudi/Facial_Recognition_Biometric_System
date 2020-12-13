@@ -5,7 +5,7 @@ import os #enables getting file names from directory
 import random
 import copy
 import face_recognition
-from pymongo import MongoClient
+import pymongo
 import bson
 #from PIL import Image #we may also use skimage
 #from skimage import io #enables reading a single image
@@ -283,6 +283,7 @@ for dir in train_directories:
 for cur_image in sum([train_image.train_list, validation_image.validation_list, test_image.test_list],[]):
     cur_image.normalize()
 
+#the images the a face have been detected in them are inserted to the database
 train_documents=[]
 for cur_image in sum([train_image.train_list,augmentation_image.augmentation_list],[]):
     if cur_image.face_detected:
@@ -319,9 +320,9 @@ for cur_image in test_image.test_list:
         }))
         cur_image.update_in_db(True)
 
-client = MongoClient('mongodb://localhost:27017/')
+client = pymongo.MongoClient('mongodb://localhost:27017/')
 with client:
     db = client.biometric_system
-    db.train_documents.insert_many(train_documents)
-    db.train_documents.insert_many(validation_documents)
-    db.train_documents.insert_many(test_documents)
+    db.faces.insert_many(train_documents)
+    db.faces.insert_many(validation_documents)
+    db.faces.insert_many(test_documents)
