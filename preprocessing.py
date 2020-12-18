@@ -4,13 +4,11 @@ import numpy as np
 import os #enables getting file names from directory
 import random
 import copy
-import face_recognition
+import face_recognition #run this only after installing dlib, cmake and face_recognition
 import pymongo
 import bson
 #from PIL import Image #we may also use skimage
 #from skimage import io #enables reading a single image
-#import dlib
-#import face_recognition #run this only after installing dlib and face_recognition (above code)
 #import tensorflow as tf
 
 
