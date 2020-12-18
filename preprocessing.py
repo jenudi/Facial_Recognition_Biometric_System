@@ -3,7 +3,6 @@ import keras
 import numpy as np
 import os #enables getting file names from directory
 import random
-import copy
 import face_recognition #run this only after installing dlib, cmake and face_recognition
 import pymongo
 import bson
