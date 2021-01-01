@@ -205,8 +205,11 @@ if not os.path.isdir(validation_dir):
 if not os.path.isdir(test_dir):
     os.mkdir(test_dir)
 
+no_faces_detected=[]
+
 for dir in directories:
-    files = os.listdir(dataset_dir + '/' + dir)
+    dir_path=dataset_dir + '/' + dir
+    files = os.listdir(dir_path)
     images=[file for file in files if ((len(file.split('.')) == 2) and (file.split('.')[1] in ['jpg', 'jpeg', 'png']))] #contains all the images of the person in the current directory
     if len(images)<2:
         continue
@@ -216,95 +219,79 @@ for dir in directories:
     #if a person has 4 images all the images except one will he put in the train set and the last one will be put on the validation set
     #if a person has more than 4 images  all the images except two will he put in the train set and the last two will be put on the validation set and test set
 
+    for image_name in images:
+        cur_image=image(dir_path + '/' + image_name)
+        face=cur_image.detect_face()
+        if (face is None):
+            images.remove(image_name)
+            print("No face detected for " + cur_image.person)
+            no_faces_detected.append(cur_image.path)
+
     train_set=[]
     test_set = []
     validation_set = []
     if len(images)==2:
-        train_set.append(images[0])
-        test_set.append(images[1])
+        train_set.append(train_image(dir_path + '/' + images[0]))
+        test_set.append(test_image(dir_path + '/' + images[1]))
     elif len(images)==3:
-        train_set.append(images[0])
-        test_set.append(images[1])
-        validation_set.append(images[2])
+        train_set.append(train_image(dir_path + '/' + images[0]))
+        test_set.append(test_image(dir_path + '/' + images[1]))
+        validation_set.append(validation_image(dir_path + '/' + images[2]))
     elif len(images)>3:
-        train_set=images[0:math.floor(len(images)/0.5)]
-        test_set=images[math.floor(len(images)/0.5):math.floor(len(images)/0.75)]
-        validation_set=images[math.floor(len(images)/0.75):]
+        train_set=[train_image(dir_path + '/' + cur_image) for cur_image in images[0:math.floor(len(images)*0.5)]]
+        test_set=[test_image(dir_path + '/' + cur_image) for cur_image in images[math.floor(len(images)*0.5):math.floor(len(images)*0.75)]]
+        validation_set=[validation_image(dir_path + '/' + cur_image) for cur_image in images[math.floor(len(images)*0.75):]]
 
 #every image that goes to the train set generates 5 new augmentad images
 #the image face locations are saved by the method detect_face
 
-    no_faces_detected=[]
-    for image_name in train_set:
+    for new_train_image in train_set:
         if not os.path.isdir(train_dir + '/' + dir):
             os.mkdir(train_dir + '/' + dir)
-        new_train_image=train_image(dataset_dir + '/' + dir + '/' + image_name)
-        face=new_train_image.detect_face()
-        if not (face is None):
-            new_train_image.preprocess()
-            new_path=train_dir + '/' + dir + '/' + image_name
-            train_image.train_paths_list[train_image.train_paths_list.index(new_train_image.path)]=new_path
-            new_train_image.save(new_path)
+        new_train_image.preprocess()
+        new_path=train_dir + '/' + dir + '/' + image_name
+        train_image.train_paths_list[train_image.train_paths_list.index(new_train_image.path)]=new_path
+        new_train_image.save(new_path)
 
-            image_for_aug = new_train_image.values.reshape((1,) + new_train_image.values.shape)
-            i=0
-            for batch in datagen.flow(image_for_aug,
-                                        batch_size=1,
-                                        save_to_dir=train_dir + '/' + dir,
-                                        save_prefix='aug',
-                                        save_format='jpg'):
-                i += 1
-                if i == 5:
-                    break
+        image_for_aug = new_train_image.values.reshape((1,) + new_train_image.values.shape)
+        i=0
+        for batch in datagen.flow(image_for_aug,
+                                    batch_size=1,
+                                    save_to_dir=train_dir + '/' + dir,
+                                    save_prefix='aug',
+                                    save_format='jpg'):
+            i += 1
+            if i == 5:
+                break
 
-        else:
-            print("No face detected for " + new_train_image.person)
-            no_faces_detected.append(new_train_image.path)
-            train_image.train_paths_list.remove(new_train_image.path)
-
-
-    for image_name in validation_set:
-        if not os.path.isdir(validation_dir + '/' + dir):
-            os.mkdir(validation_dir + '/' + dir)
-        new_validation_image = validation_image(dataset_dir + '/' + dir + '/' + image_name)
-        face=new_validation_image.detect_face()
-        if not (face is None):
-            new_validation_image.preprocess()
-            new_path=validation_dir + '/' + dir + '/' + image_name
-            validation_image.validation_paths_list[validation_image.validation_paths_list.index(new_validation_image.path)]=new_path
-            new_validation_image.save(new_path)
-        else:
-            print("No face detected for " + new_validation_image.person)
-            no_faces_detected.append(new_validation_image.path)
-            validation_image.validation_paths_list.remove(new_validation_image.path)
-
-
-    for image_name in test_set:
+    for new_test_image in test_set:
         if not os.path.isdir(test_dir + '/' + dir):
             os.mkdir(test_dir + '/' + dir)
-        new_test_image = test_image(dataset_dir + '/' + dir + '/' + image_name)
-        face=new_test_image.detect_face()
-        if not (face is None):
-            new_path=test_dir + '/' + dir + '/' + image_name
-            new_test_image.preprocess()
-            test_image.test_paths_list[test_image.test_paths_list.index(new_test_image.path)]=new_path
-            new_test_image.save(new_path)
-        else:
-            print("No face detected for " + new_test_image.person)
-            no_faces_detected.append(new_train_image.path)
-            test_image.test_paths_list.remove(new_test_image.path)
+        new_path = test_dir + '/' + dir + '/' + image_name
+        new_test_image.preprocess()
+        test_image.test_paths_list[test_image.test_paths_list.index(new_test_image.path)] = new_path
+        new_test_image.save(new_path)
 
+
+    for new_validation_image in validation_set:
+        if not os.path.isdir(validation_dir + '/' + dir):
+            os.mkdir(validation_dir + '/' + dir)
+        new_validation_image.preprocess()
+        new_path=validation_dir + '/' + dir + '/' + image_name
+        validation_image.validation_paths_list[validation_image.validation_paths_list.index(new_validation_image.path)]=new_path
+        new_validation_image.save(new_path)
 
 #all the augmented values are collected and go through face detection and normalization like the other images
 train_directories = [dir for dir in os.listdir(train_dir) if not '.' in dir]
 for dir in train_directories:
-    files = os.listdir(train_dir + '/' + dir)
+    dir_path=train_dir + '/' + dir
+    files = os.listdir(dir_path)
     augmentation_images=[file for file in files if ((len(file.split('.'))==2) and (file.split('.')[1] in ['jpg', 'jpeg', 'png']) and file.split('_')[0]=='aug') ]
 
     for cur_image in augmentation_images:
-        new_augmentation_image=augmentation_image(train_dir + '/' + dir + '/' + cur_image)
+        new_augmentation_image=augmentation_image(dir_path + '/' + cur_image)
         face=new_augmentation_image.detect_face()
-        if (face is None):
+        if face is None:
             augmentation_image.augmentation_paths_list.remove(new_augmentation_image.path)
             os.remove(new_augmentation_image.path)
 
@@ -321,9 +308,9 @@ for set in [whole_train_set,validation_image.validation_paths_list,test_image.te
 
 if not os.path.isdir(dataset_dir + '/' + 'no_faces_detected'):
     os.mkdir(dataset_dir + '/' + 'no_faces_detected')
-for image_name in no_faces_detected:
-    no_face_image=image(image_name)
-    no_face_image.save(dataset_dir + '/' + 'no_faces_detected' + '/' + image_name)
+for image_path in no_faces_detected:
+    no_face_image=image(image_path)
+    no_face_image.save(dataset_dir + '/' + 'no_faces_detected' + '/' + no_face_image.file_name)
 
 '''''
 #all the images in the train, validation and test sets go through normalization
