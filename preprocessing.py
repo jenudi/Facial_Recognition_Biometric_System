@@ -314,7 +314,7 @@ for image_path in no_faces_detected:
 
 '''''
 #all the images in the train, validation and test sets go through normalization
-#the normalization type is standartization that is done by substracting the train set mean and dividing by the train set STD
+#the normalization type is standardization that is done by substracting the train set mean and dividing by the train set STD
 #the normalized values are calculated by the normalize mothod
 
 train_documents=[]
