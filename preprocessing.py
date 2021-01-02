@@ -1,7 +1,6 @@
 import cv2 as cv
 import keras
 import numpy as np
-import pandas as pd
 import os #enables getting file names from directory
 import random
 import face_recognition #run this only after installing dlib, cmake and face_recognition
