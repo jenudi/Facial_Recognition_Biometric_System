@@ -15,7 +15,6 @@ if __name__ == "__main__":
     #all the images in the train, validation and test sets go through normalization
     #the normalization type is standardization that is done by substracting the train set mean and dividing by the train set STD
     #the normalized values are calculated by the normalize mothod
-
     train_set_df=pd.DataFrame(columns=['normalized values', 'label'])
 
     for index,image_name in enumerate(train_set):
