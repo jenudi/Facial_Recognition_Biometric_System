@@ -251,11 +251,7 @@ if __name__ == "__main__":
 
             image_for_aug = new_train_image.values.reshape((1,) + new_train_image.values.shape)
             i=0
-            for batch in datagen.flow(image_for_aug,
-                                        batch_size=1,
-                                        save_to_dir=train_dir + '/' + dir,
-                                        save_prefix='aug',
-                                        save_format='jpg'):
+            for batch in datagen.flow(image_for_aug, batch_size=1, save_to_dir=new_train_dir, save_prefix='aug', save_format='jpg'):
                 i += 1
                 if i == 5:
                     break
