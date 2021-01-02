@@ -215,7 +215,6 @@ if __name__ == "__main__":
         #if a person has 3 images all the images will be put in the train set
         #if a person has 4 images all the images except one will he put in the train set and the last one will be put on the validation set
         #if a person has more than 4 images  all the images except two will he put in the train set and the last two will be put on the validation set and test set
-
         for image_name in images:
             cur_image=image(''.join([dir_path, '/', image_name]))
             face=cur_image.detect_face()
@@ -241,7 +240,6 @@ if __name__ == "__main__":
 
     #every image that goes to the train set generates 5 new augmentad images
     #the image face locations are saved by the method detect_face
-
         for new_train_image in cur_train_set:
             new_train_dir=''.join([train_dir, '/', dir])
             if not os.path.isdir(new_train_dir):
