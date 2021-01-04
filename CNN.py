@@ -1,5 +1,4 @@
 import cv2 as cv
-import keras
 import numpy as np
 import pandas as pd
 import os #enables getting file names from directory
@@ -7,7 +6,7 @@ import random
 import face_recognition #run this only after installing dlib, cmake and face_recognition
 import pymongo
 import bson
-from preprocessing import image, train_set, validation_set, test_set
+from preprocessing import image_in_set, train_set, validation_set, test_set
 
 
 if __name__ == "__main__":
@@ -16,29 +15,25 @@ if __name__ == "__main__":
     #the normalization type is standardization that is done by substracting the train set mean and dividing by the train set STD
     #the normalized values are calculated by the normalize mothod
     train_set_df=pd.DataFrame(columns=['normalized values', 'label'])
-
     for index,image_name in enumerate(train_set):
-        cur_image = image(image_name)
+        cur_image = image_in_set(image_name)
         cur_image.values = cur_image.detect_face()
         if not (cur_image.values is None):
             train_set_df.loc[index]=[cur_image.normalize(),cur_image.person]
 
     validation_set_df=pd.DataFrame(columns=['normalized values', 'label'])
-
     for index,image_name in enumerate(validation_set):
-        cur_image = image(image_name)
+        cur_image = image_in_set(image_name)
         cur_image.values = cur_image.detect_face()
         if not (cur_image.values is None):
             validation_set_df.loc[index]=[cur_image.normalize(),cur_image.person]
 
     test_set_df=pd.DataFrame(columns=['normalized values', 'label'])
-
     for index,image_name in enumerate(test_set):
-        cur_image = image(image_name)
+        cur_image = image_in_set(image_name)
         cur_image.values = cur_image.detect_face()
         if not (cur_image.values is None):
             test_set_df.loc[index]=[cur_image.normalize(),cur_image.person]
-
 
 
     '''''
@@ -89,4 +84,3 @@ if __name__ == "__main__":
         db.faces.insert_many(validation_documents)
         db.faces.insert_many(test_documents)
     '''''
-
