@@ -39,7 +39,6 @@ class image_in_set:
         self.path = new_path
         cv.imwrite(self.path, self.values)
 
-
     def resize_image(self):
         self.values = cv.resize(self.values, (160, 160))
 
