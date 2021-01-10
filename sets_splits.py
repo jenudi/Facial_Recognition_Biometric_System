@@ -30,10 +30,13 @@ class image_in_set:
         else:
             return None
 
-    def normalize(self,paths_list):
-        images_mean = get_images_mean(paths_list)
-        images_std = get_images_std(paths_list)
-        return (self.values - images_mean) / images_std
+    def normalize_by_train_values(self,train_paths_list):
+        train_mean = get_images_mean(train_paths_list)
+        train_std = get_images_std(train_paths_list)
+        return (self.values - train_mean) / train_std
+
+    def normalize_by_image_values(self):
+        return (self.values- self.values.mean())/self.values.std()
 
     def save(self, new_path):
         self.path = new_path
@@ -52,24 +55,31 @@ class face_image(image_in_set):
 
 
 def get_images_mean(paths_list):
-    if len(paths_list):
-        train_mean=[]
-        for path in paths_list:
-            train_image=image_in_set(path)
-            train_mean.append(train_image.values)
-            return np.mean(train_mean,axis=(0,1,2))
-    else:
-        raise ValueError("No images")
+    assert len(paths_list)>0, "paths list must not be empty"
+    train_mean=list()
+    for path in paths_list:
+        train_image=image_in_set(path)
+        train_mean.append(train_image.values)
+    return np.mean(train_mean, axis=(0, 1, 2))
+
 
 def get_images_std(paths_list):
-    if len(paths_list):
-        train_std=[]
-        for path in paths_list:
-            train_image=image_in_set(path)
-            train_std.append(train_image.values)
-            return np.std(train_std,axis=(0,1,2))
+    assert len(paths_list)>0, "paths list must not be empty"
+    train_std=list()
+    for path in paths_list:
+        train_image=image_in_set(path)
+        train_std.append(train_image.values)
+    return np.std(train_std,axis=(0,1,2))
+
+def get_embedding(cur_image, normalization_method, model, train_paths_list=None):
+    if normalization_method=="normalize_by_train_values":
+        assert not train_paths_list is None, "enter train paths list in order to use the normalize by train values method"
+        norm_values = cur_image.normalize_by_train_values(train_paths_list).astype("float32")
     else:
-        raise ValueError("No images")
+        norm_values = cur_image.normalize_by_image_values()
+    four_dim_values = np.expand_dims(norm_values, axis=0)
+    embedding=model.predict(four_dim_values)[0]
+    return embedding
 
 
 #all the train set images are saved in a list which is a class variable. this list is used in order or extract the mean and std of the
@@ -133,7 +143,7 @@ if __name__ == "__main__":
             cur_validation_set.append(image_in_set(''.join([dir_path, '\\', images[1]])))
             cur_test_set.append(image_in_set(''.join([dir_path, '\\', images[2]])))
         elif len(images)>3:
-            cur_train_set=[image_in_set(''.join([dir_path, '\\', cur_image])) for cur_image in images[0:math.ceil(len(images)*0.5)]]
+            cur_train_set=[image_in_set(''.join([dir_path, '\\', cur_image])) for cur_image in images[:math.ceil(len(images)*0.5)]]
             cur_validation_set=[image_in_set(''.join([dir_path, '\\', cur_image])) for cur_image in images[math.ceil(len(images)*0.5):round(len(images)*0.75)]]
             cur_test_set=[image_in_set(''.join([dir_path, '\\', cur_image])) for cur_image in images[round(len(images) * 0.75):]]
 
@@ -171,7 +181,7 @@ if __name__ == "__main__":
             new_test_dir=''.join([test_dir, '\\', dir])
             if not os.path.isdir(new_test_dir):
                 os.mkdir(new_test_dir)
-            new_path = ''.join([test_dir, '\\', dir, '\\', new_test_image.file_name])
+            new_face_image = new_validation_image.get_face_image()
             new_face_image.resize_image()
             new_path=''.join([test_dir, '\\', dir, '\\', new_train_image.file_name])
             new_face_image.save(new_path)
@@ -202,27 +212,23 @@ if __name__ == "__main__":
     #all the images in the train, validation and test sets go through normalization
     #the normalization type is standardization that is done by substracting the train set mean and dividing by the train set STD
     #the normalized values are calculated by the normalize mothod
-    model_name='facenet_keras.h5'
-    model = tf.keras.models.load_model(model_name,compile=False)
+    facenet_model = tf.keras.models.load_model('facenet_keras.h5',compile=False)
 
     whole_train_paths = sum([train_paths, augmentation_paths], [])
     train_df=pd.DataFrame(columns=['embedding', 'label'])
     for index,image_path in enumerate(whole_train_paths):
         cur_image = image_in_set(image_path)
-        norm_values=cur_image.normalize(train_paths).astype("float32")
-        four_dim_values=np.expand_dims(norm_values, axis=0)
-        train_df.loc[index]=[model.predict(four_dim_values)[0],cur_image.person]
+        cur_image_embedding=get_embedding(cur_image,"normalize_by_train_values",facenet_model,train_paths)
+        train_df.loc[index]=[cur_image_embedding,cur_image.person]
 
     validation_df=pd.DataFrame(columns=['embedding', 'label'])
     for index,image_path in enumerate(validation_paths):
         cur_image = image_in_set(image_path)
-        norm_values=cur_image.normalize(train_paths).astype("float32")
-        four_dim_values=np.expand_dims(norm_values, axis=0)
-        validation_df.loc[index]=[model.predict(four_dim_values)[0],cur_image.person]
+        cur_image_embedding=get_embedding(cur_image,"normalize_by_train_values",facenet_model,train_paths)
+        validation_df.loc[index]=[cur_image_embedding,cur_image.person]
 
     test_df=pd.DataFrame(columns=['embedding', 'label'])
     for index,image_path in enumerate(test_paths):
         cur_image = image_in_set(image_path)
-        norm_values=cur_image.normalize(train_paths).astype("float32")
-        four_dim_values=np.expand_dims(norm_values, axis=0)
-        test_df.loc[index]=[model.predict(four_dim_values)[0],cur_image.person]
+        cur_image_embedding=get_embedding(cur_image,"normalize_by_train_values",facenet_model,train_paths)
+        test_df.loc[index]=[cur_image_embedding,cur_image.person]
