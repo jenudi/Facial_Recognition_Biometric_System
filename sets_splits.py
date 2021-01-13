@@ -198,7 +198,9 @@ def main(augmentation_num = 10):
             new_augmentation_image=image_in_set(''.join([dir_path, '\\', cur_image]))
             new_face_image=new_augmentation_image.get_face_image()
             os.remove(new_augmentation_image.path)
-            if not new_face_image is None:
+            if new_face_image is None:
+                continue
+            else:
                 new_face_image.resize_image()
                 new_face_image.save(new_augmentation_image.path)
                 augmentation_paths.append(new_face_image.path)
@@ -213,6 +215,7 @@ def main(augmentation_num = 10):
     #all the images in the train, validation and test sets go through normalization
     #the normalization type is standardization that is done by substracting the train set mean and dividing by the train set STD
     #the normalized values are calculated by the normalize mothod
+
     facenet_model = tf.keras.models.load_model('facenet_keras.h5',compile=False)
 
     train_df=pd.DataFrame(columns=['name', 'embedding', 'path'])
@@ -240,13 +243,20 @@ def main(augmentation_num = 10):
         test_df.loc[index]=[cur_image.person, cur_image_embedding, image_paths[1]]
 
     all_data_df = pd.concat([train_df,validation_df,test_df],ignore_index=True)
-
+    db_df=all_data_df.groupby('name',as_index=False).aggregate({'embedding':list, 'path':list})
     train_df=pd.concat([train_df.drop('path',axis=1),augmentation_df],ignore_index=True)
     validation_df.drop('path',axis=1, inplace=True)
     test_df.drop('path',axis=1, inplace=True)
 
-    return all_data_df
 
-all_data_df=main()
+    if not os.path.isdir('datasets'):
+        os.mkdir('datasets')
+    os.chdir('datasets')
+    db_df.to_csv(path_or_buf=os.getcwd() + '\\db_df.csv',index=False)
+    train_df.to_csv(path_or_buf=os.getcwd() + '\\train.csv',index=False)
+    validation_df.to_csv(path_or_buf=os.getcwd() + '\\validation.csv',index=False)
+    test_df.to_csv(path_or_buf=os.getcwd() + '\\test.csv',index=False)
 
-db_df=all_data_df.groupby('name',as_index=False).aggregate({'embedding':list, 'path':list})
+    os.chdir('../../')
+
+main(augmentation_num = 10)
