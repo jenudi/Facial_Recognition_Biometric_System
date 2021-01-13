@@ -1,61 +1,48 @@
-import cv2 as cv
 import numpy as np
 import pandas as pd
-import os #enables getting file names from directory
 import random
-import face_recognition #run this only after installing dlib, cmake and face_recognition
+from datetime import datetime
 import pymongo
 import bson
+from datetime import date,time
+from pymongo import MongoClient
 from sets_splits import db_df
 
 
 if __name__ == "__main__":
 
-    '''''
-    train_documents=[]
-    for cur_image in sum([train_image.train_paths_list,augmentation_image.augmentation_paths_list],[]):
-        cur_train_image=image(cur_image)
-        cur_train_image.values=cur_train_image.detect_face()
-        normalized_values=cur_train_image.normalize()
-        train_documents.append(bson.son.SON({
-        "values":cur_train_image.values.tolist(),
-        "normalized_values":normalized_values.tolist(),
-        "person":cur_train_image.person,
-        "path":cur_train_image.path,
-        "set":"train"
+    documents_for_db=list()
+    for index,person in enumerate(db_df['name']):
+        document_images=list()
+        for embedding,path in zip(db_df.iloc[index]['embedding'],db_df.iloc[index]['path']):
+            document_images.append(bson.son.SON({
+                "file_name" : path.split('\\')[-1],
+                "path" : path,
+                "embedding":embedding,
+                "Acuracy":None
+            }))
+        documents_attendence=[
+            bson.son.SON({
+                "Date":date(2021,1,1),
+                "Entry":time(8,0,0),
+                "Exit":time(17,0,0)
+            }),
+            bson.son.SON({
+                "Date": date(2021, 1, 2),
+                "Entry": time(8, 30, 0),
+                "Exit": time(16, 30, 0)
+            })
+        ]
+        documents_for_db.append(bson.son.SON({
+        "Name":person,
+        "ID":index,
+        "Employee number":index,
+        "Branch":random.choise(['A','B','C','D']),
+        "Attendence":documents_attendence,
+        "Images":document_images
         }))
     
-    validation_documents=[]
-    for cur_image in validation_image.validation_paths_list:
-        cur_validation_image=image(cur_image)
-        cur_validation_image.values=cur_validation_image.detect_face()
-        normalized_values=cur_validation_image.normalize()
-        validation_documents.append(bson.son.SON({
-        "values":cur_train_image.values.tolist(),
-        "normalized_values":normalized_values.tolist(),
-        "person":cur_train_image.person,
-        "path":cur_validation_image.path,
-        "set":"validation"
-        }))
-    
-    test_documents=[]
-    for cur_image in test_image.test_paths_list:
-        cur_test_image=image(cur_image)
-        cur_test_image.values=cur_test_image.detect_face()
-        normalized_values=cur_test_image.normalize()
-        test_documents.append(bson.son.SON({
-        "values":cur_train_image.values.tolist(),
-        "normalized_values":normalized_values.tolist(),
-        "person":cur_train_image.person,
-        "path":cur_test_image.path,
-        "set":"test"
-        }))
-    
-    
-    client = pymongo.MongoClient('mongodb://localhost:27017/')
+    client = MongoClient('mongodb://localhost:27017/')
     with client:
         db = client.biometric_system
-        db.faces.insert_many(train_documents)
-        db.faces.insert_many(validation_documents)
-        db.faces.insert_many(test_documents)
-    '''''
+        db.faces.insert_many(documents_for_db)
