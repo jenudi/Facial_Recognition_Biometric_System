@@ -86,7 +86,7 @@ def get_embedding(cur_image, normalization_method, model, train_paths_list=None)
 #train set images for normalization for the rest of the images
 
 
-if __name__ == "__main__":
+def main(augmentation_num = 10):
 
     dataset_dir=input("Please enter the dataset directory path")
     os.chdir(dataset_dir)
@@ -108,8 +108,6 @@ if __name__ == "__main__":
     test_paths = list()
     augmentation_paths = list()
     no_faces_detected = list()
-
-    augmentation_num = 10
 
     for dir in directories:
         dir_path=''.join([dataset_dir, '\\', dir])
@@ -181,9 +179,9 @@ if __name__ == "__main__":
             new_test_dir=''.join([test_dir, '\\', dir])
             if not os.path.isdir(new_test_dir):
                 os.mkdir(new_test_dir)
-            new_face_image = new_validation_image.get_face_image()
+            new_face_image = new_test_image.get_face_image()
             new_face_image.resize_image()
-            new_path=''.join([test_dir, '\\', dir, '\\', new_train_image.file_name])
+            new_path=''.join([test_dir, '\\', dir, '\\', new_test_image.file_name])
             new_face_image.save(new_path)
             test_paths.append(new_path)
 
@@ -215,20 +213,26 @@ if __name__ == "__main__":
     facenet_model = tf.keras.models.load_model('facenet_keras.h5',compile=False)
 
     whole_train_paths = sum([train_paths, augmentation_paths], [])
-    train_df=pd.DataFrame(columns=['embedding', 'label'])
+    train_df=pd.DataFrame(columns=['embedding', 'name'])
     for index,image_path in enumerate(whole_train_paths):
         cur_image = image_in_set(image_path)
         cur_image_embedding=get_embedding(cur_image,"normalize_by_train_values",facenet_model,train_paths)
         train_df.loc[index]=[cur_image_embedding,cur_image.person]
 
-    validation_df=pd.DataFrame(columns=['embedding', 'label'])
+    validation_df=pd.DataFrame(columns=['embedding', 'name'])
     for index,image_path in enumerate(validation_paths):
         cur_image = image_in_set(image_path)
         cur_image_embedding=get_embedding(cur_image,"normalize_by_train_values",facenet_model,train_paths)
         validation_df.loc[index]=[cur_image_embedding,cur_image.person]
 
-    test_df=pd.DataFrame(columns=['embedding', 'label'])
+    test_df=pd.DataFrame(columns=['embedding', 'name'])
     for index,image_path in enumerate(test_paths):
         cur_image = image_in_set(image_path)
         cur_image_embedding=get_embedding(cur_image,"normalize_by_train_values",facenet_model,train_paths)
         test_df.loc[index]=[cur_image_embedding,cur_image.person]
+
+    return pd.concat([train_df,validation_df,test_df],ignore_index=True)
+
+all_data_df=main()
+
+db_df=all_data_df.groupby('name',as_index=False).aggregate({'embedding':list})
