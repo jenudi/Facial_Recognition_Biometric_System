@@ -16,6 +16,9 @@ class DataArgs:
         self.embedding = 'embedding'
         self.target = 'name'
 
+        self.num_features= 1
+        self.num_in_features = 100
+
         # Hyper-parameters
         self.in_channel = 1
         self.learning_rate = 1e-3
@@ -45,11 +48,16 @@ class TabularDataset(Dataset):
 class Net(nn.Module):
 
     def __init__(self):
-        super(ConvNet, self).__init__()
-        pass
+        super(Net, self).__init__()
+        self.fc1 = nn.Linear(1, 100)
+        self.fc2 = nn.Linear(100)
+        self.fc3 = nn.Linear(100, 10)
 
     def forward(self, x):
-        pass
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
 
 
 args = DataArgs()
