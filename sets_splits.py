@@ -94,13 +94,18 @@ directories = [dir for dir in os.listdir(dataset_dir) if not '.' in dir] #direct
 
 #new direstories are being made for the train, validation and test sets
 sets_dir=''.join([dataset_dir, '\\sets'])
+if not os.path.isdir(sets_dir):
+    os.mkdir(sets_dir)
+
 train_dir = ''.join([sets_dir, '\\train'])
-validation_dir = ''.join([sets_dir, '\\validation'])
-test_dir = ''.join([sets_dir, '\\test'])
 if not os.path.isdir(train_dir):
     os.mkdir(train_dir)
+
+validation_dir = ''.join([sets_dir, '\\validation'])
 if not os.path.isdir(validation_dir):
     os.mkdir(validation_dir)
+
+test_dir = ''.join([sets_dir, '\\test'])
 if not os.path.isdir(test_dir):
     os.mkdir(test_dir)
 
