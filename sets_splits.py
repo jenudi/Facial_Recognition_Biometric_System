@@ -87,16 +87,16 @@ def get_embedding(cur_image, normalization_method, model, train_paths_list=None)
 
 dataset_dir=input("Please enter the dataset directory path")
 
-
 augmentation_num = 20
 
 os.chdir(dataset_dir)
 directories = [dir for dir in os.listdir(dataset_dir) if not '.' in dir] #directories contain all the people that have images in the dataset
 
 #new direstories are being made for the train, validation and test sets
-train_dir = ''.join([dataset_dir, '\\train'])
-validation_dir = ''.join([dataset_dir, '\\validation'])
-test_dir = ''.join([dataset_dir, '\\test'])
+sets_dir=''.join([dataset_dir, '\\sets'])
+train_dir = ''.join([sets_dir, '\\train'])
+validation_dir = ''.join([sets_dir, '\\validation'])
+test_dir = ''.join([sets_dir, '\\test'])
 if not os.path.isdir(train_dir):
     os.mkdir(train_dir)
 if not os.path.isdir(validation_dir):
@@ -154,6 +154,8 @@ for dir in directories:
         if not os.path.isdir(new_train_dir):
             os.mkdir(new_train_dir)
         new_face_image = new_train_image.get_face_image()
+        if new_face_image is None:
+            continue
         new_face_image.resize_image()
         new_path=''.join([train_dir, '\\', dir, '\\', new_train_image.file_name])
         old_path=new_train_image.path
@@ -172,6 +174,8 @@ for dir in directories:
         if not os.path.isdir(new_validation_dir):
             os.mkdir(new_validation_dir)
         new_face_image = new_validation_image.get_face_image()
+        if new_face_image is None:
+            continue
         new_face_image.resize_image()
         new_path=''.join([validation_dir, '\\', dir, '\\', new_validation_image.file_name])
         old_path=new_train_image.path
@@ -183,6 +187,8 @@ for dir in directories:
         if not os.path.isdir(new_test_dir):
             os.mkdir(new_test_dir)
         new_face_image = new_test_image.get_face_image()
+        if new_face_image is None:
+            continue
         new_face_image.resize_image()
         new_path=''.join([test_dir, '\\', dir, '\\', new_test_image.file_name])
         old_path=new_train_image.path
