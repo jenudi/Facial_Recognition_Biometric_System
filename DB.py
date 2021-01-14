@@ -4,13 +4,13 @@ from bson.son import SON
 from pymongo import MongoClient
 from sets_splits import db_df
 
-def make_image_bson(path,embedding,Acuracy=None):
+def make_image_bson(path,embedding,Accuracy=None):
     return\
     SON({
         "file_name": path.split('\\')[-1],
         "path": path,
         "embedding": SON({str(index):float(value) for index,value in enumerate(embedding)}),
-        "Acuracy": Acuracy
+        "Accuracy": Accuracy
     })
 
 def make_day_bson(year,month,day,entry_time=(8,0,0),exit_time=(17,0,0)):

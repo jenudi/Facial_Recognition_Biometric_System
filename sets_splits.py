@@ -25,7 +25,7 @@ class image_in_set:
             face=self.values[face_loc[0][0]:face_loc[0][1],face_loc[0][3]:face_loc[0][2]]
         except IndexError:
             return None
-        if (not face is None) and len(face):
+        if (not face is None) and (not isinstance(face, type(None))) and len(face):
             return face_image(face,self.person)
         else:
             return None
@@ -55,7 +55,7 @@ class face_image(image_in_set):
 
 
 def get_images_mean(paths_list):
-    assert len(paths_list)>0, "paths list must not be empty"
+    assert len(paths_list), "paths list must not be empty"
     train_mean=list()
     for path in paths_list:
         train_image=image_in_set(path[0])
@@ -63,7 +63,7 @@ def get_images_mean(paths_list):
     return np.mean(train_mean, axis=(0, 1, 2))
 
 def get_images_std(paths_list):
-    assert len(paths_list)>0, "paths list must not be empty"
+    assert len(paths_list), "paths list must not be empty"
     train_std=list()
     for path in paths_list:
         train_image=image_in_set(path[0])
@@ -73,7 +73,7 @@ def get_images_std(paths_list):
 
 def get_embedding(cur_image, normalization_method, model, train_paths_list=None):
     if normalization_method=="normalize_by_train_values":
-        assert not train_paths_list is None, "enter train paths list in order to use the normalize by train values method"
+        assert (not train_paths_list is None) or (not isinstance(face, type(None))), "enter train paths list in order to use the normalize by train values method"
         norm_values = cur_image.normalize_by_train_values(train_paths_list).astype("float32")
     else:
         norm_values = cur_image.normalize_by_image_values()
@@ -130,7 +130,7 @@ for dir in directories:
     for image_name in images:
         cur_image=image_in_set(''.join([dir_path, '\\', image_name]))
         face=cur_image.get_face_image()
-        if face is None:
+        if (face is None) or (isinstance(face, type(None))):
             images.remove(image_name)
             print(' '.join(["No face detected for",cur_image.person]))
             no_faces_detected.append(cur_image.path)
@@ -159,8 +159,6 @@ for dir in directories:
         if not os.path.isdir(new_train_dir):
             os.mkdir(new_train_dir)
         new_face_image = new_train_image.get_face_image()
-        if new_face_image is None:
-            continue
         new_face_image.resize_image()
         new_path=''.join([train_dir, '\\', dir, '\\', new_train_image.file_name])
         old_path=new_train_image.path
@@ -179,8 +177,6 @@ for dir in directories:
         if not os.path.isdir(new_validation_dir):
             os.mkdir(new_validation_dir)
         new_face_image = new_validation_image.get_face_image()
-        if new_face_image is None:
-            continue
         new_face_image.resize_image()
         new_path=''.join([validation_dir, '\\', dir, '\\', new_validation_image.file_name])
         old_path=new_train_image.path
@@ -192,8 +188,6 @@ for dir in directories:
         if not os.path.isdir(new_test_dir):
             os.mkdir(new_test_dir)
         new_face_image = new_test_image.get_face_image()
-        if new_face_image is None:
-            continue
         new_face_image.resize_image()
         new_path=''.join([test_dir, '\\', dir, '\\', new_test_image.file_name])
         old_path=new_train_image.path
@@ -210,7 +204,8 @@ for dir in train_directories:
         new_augmentation_image=image_in_set(''.join([dir_path, '\\', cur_image]))
         new_face_image=new_augmentation_image.get_face_image()
         os.remove(new_augmentation_image.path)
-        if (new_face_image is None) or (new_face_image.values.shape[0]<80) or (new_face_image.values.shape[1]<80) or (abs(new_face_image.values.shape[0]-new_face_image.values.shape[1])>80):
+        if (new_face_image is None) or (isinstance(new_face_image, type(None))) or\
+        (new_face_image.values.shape[0]<80) or (new_face_image.values.shape[1]<80) or (abs(new_face_image.values.shape[0]-new_face_image.values.shape[1])>80):
             continue
         else:
             new_face_image.resize_image()
@@ -256,6 +251,7 @@ for index,image_paths in enumerate(test_paths):
 
 all_data_df = pd.concat([train_df,validation_df,test_df],ignore_index=True)
 db_df=all_data_df.groupby('name',as_index=False).aggregate({'embedding':list, 'path':list})
+
 train_df=pd.concat([train_df.drop('path',axis=1),augmentation_df],ignore_index=True)
 validation_df.drop('path',axis=1, inplace=True)
 test_df.drop('path',axis=1, inplace=True)
