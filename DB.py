@@ -4,16 +4,17 @@ from bson.son import SON
 from pymongo import MongoClient
 from sets_splits import db_df
 
-def make_image_bson(path,embedding,accuracy):
+def make_image_bson(employee_id,path,embedding,accuracy):
     return\
     SON({
-        "file_name": path.split('\\')[-1],
+        "employee id": employee_id,
+        "file name": path.split('\\')[-1],
         "path": path,
         "accuracy": accuracy,
         "embedding": SON({str(index):float(value) for index,value in enumerate(embedding)})
     })
 
-def make_day_bson(year,month,day,entry_time=(8,0,0),exit_time=(17,0,0)):
+def make_day_bson(employee_id,year,month,day,entry_time=(8,0,0),exit_time=(17,0,0)):
     hours=exit_time[0] - entry_time[0] - (exit_time[1] < entry_time[1])
     minutes = exit_time[1] - entry_time[1] - (exit_time[2] < entry_time[2])
     if minutes<0:
@@ -24,6 +25,7 @@ def make_day_bson(year,month,day,entry_time=(8,0,0),exit_time=(17,0,0)):
 
     return \
     SON({
+        "employee id":employee_id,
         "date": SON({"year":year,"month":month,"day":day}),
         "entry": SON({"hour":entry_time[0],"minute":entry_time[1],"second":entry_time[2]}),
         "exit": SON({"hour":exit_time[0],"minute":exit_time[1],"second":exit_time[2]}),
@@ -45,33 +47,21 @@ if __name__ == "__main__":
     attendance=list()
     for index,name in enumerate(db_df['name']):
 
+        employee_id = int(db_df.iloc[index]['id'])
+
         employees.append(SON({
-        "id": int(db_df.iloc[index]['id']),
-        "employee number": int(db_df.iloc[index]['id']),
+        "employee id": employee_id,
+        "employee number": employee_id,
         "name": name,
         "branch": get_random(['A','B','C','D'])
         }))
 
 
-        document_images=list()
         for embedding,path in zip(db_df.iloc[index]['embedding'],db_df.iloc[index]['path']):
-            document_images.append(make_image_bson(path,embedding,None))
+            images.append(make_image_bson(employee_id,path,embedding,None))
 
-        images.append(SON({
-            "id": int(db_df.iloc[index]['id']),
-            "name": name,
-            "images":document_images
-        }))
-
-
-        documents_attendance=[make_day_bson(2021,1,1),make_day_bson(2021,1,2,(8,randint(0,59),randint(0,59)),(17,randint(0,59),randint(0,59)))]
-
-        attendance.append(SON({
-            "id": int(db_df.iloc[index]['id']),
-            "name": name,
-            "attendence": documents_attendance
-        }))
-
+        attendance.append(make_day_bson(employee_id,2021,1,1))
+        attendance.append(make_day_bson(employee_id,2021,1,2,(8,randint(0,59),randint(0,59)),(17,randint(0,59),randint(0,59))))
 
 
     client = MongoClient('mongodb://localhost:27017/')
