@@ -5,13 +5,14 @@ from bson.son import SON
 from pymongo import MongoClient
 from sets_splits import db_df
 
-def make_image_bson(employee_id,path,embedding,accuracy):
+def make_image_bson(employee_id,path,embedding,recognized='not yet tested',accuracy='not yet tested'):
     now=datetime.now().strftime('%Y %m %d %H %M %S').split(' ')
     return\
     SON({
         "employee id": employee_id,
         "file name": path.split('\\')[-1],
         "path": path,
+        "recognized": recognized,
         "accuracy": accuracy,
         "embedding": SON({str(index): float(value) for index, value in enumerate(embedding)}),
         "upload date": SON({"year":int(now[0]),"month":int(now[1]),"day":int(now[2])}),
@@ -62,7 +63,7 @@ if __name__ == "__main__":
         }))
 
         for embedding,path in zip(db_df.iloc[index]['embedding'],db_df.iloc[index]['path']):
-            images.append(make_image_bson(employee_id,path,embedding,None))
+            images.append(make_image_bson(employee_id,path,embedding))
 
         attendance.append(make_day_bson(employee_id,2021,1,1))
         attendance.append(make_day_bson(employee_id,2021,1,2,(8,randint(0,59),randint(0,59)),(17,randint(0,59),randint(0,59))))
