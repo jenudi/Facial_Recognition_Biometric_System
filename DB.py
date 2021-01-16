@@ -23,10 +23,10 @@ def make_day_bson(employee_id,year,month,day,entry_time=(8,0,0),exit_time=(17,0,
     hours=exit_time[0] - entry_time[0] - (exit_time[1] < entry_time[1])
     minutes = exit_time[1] - entry_time[1] - (exit_time[2] < entry_time[2])
     if minutes<0:
-        minutes=60+minutes
+        minutes+=60
     seconds=exit_time[2] - entry_time[2]
     if seconds<0:
-        seconds=60+seconds
+        seconds+=60
 
     return \
     SON({
