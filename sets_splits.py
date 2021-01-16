@@ -191,7 +191,7 @@ for dir in directories:
         new_face_image = new_validation_image.get_face_image()
         new_face_image.resize_image()
         new_path=''.join([validation_dir, '\\', dir, '\\', new_validation_image.file_name])
-        old_path=new_train_image.path
+        old_path=new_validation_image.path
         new_face_image.save(new_path)
         validation_paths.append((new_path, old_path))
 
@@ -202,7 +202,7 @@ for dir in directories:
         new_face_image = new_test_image.get_face_image()
         new_face_image.resize_image()
         new_path=''.join([test_dir, '\\', dir, '\\', new_test_image.file_name])
-        old_path=new_train_image.path
+        old_path=new_test_image.path
         new_face_image.save(new_path)
         test_paths.append((new_path, old_path))
 

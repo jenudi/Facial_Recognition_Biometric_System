@@ -9,9 +9,9 @@ def make_image_bson(employee_id,path,embedding,recognized='not yet tested',accur
     now=datetime.now().strftime('%Y %m %d %H %M %S').split(' ')
     return\
     SON({
-        "employee id": employee_id,
-        "file name": path.split('\\')[-1],
+        "_id": path.split('\\')[-1],
         "path": path,
+        "employee id": employee_id,
         "recognized": recognized,
         "accuracy": accuracy,
         "embedding": SON({str(index): float(value) for index, value in enumerate(embedding)}),
@@ -30,6 +30,7 @@ def make_day_bson(employee_id,year,month,day,entry_time=(8,0,0),exit_time=(17,0,
 
     return \
     SON({
+        "_id": ''.join([str(employee_id),str(year),str(month),str(day)]),
         "employee id":employee_id,
         "date": SON({"year":year,"month":month,"day":day}),
         "entry": SON({"hour":entry_time[0],"minute":entry_time[1],"second":entry_time[2]}),
@@ -56,7 +57,7 @@ if __name__ == "__main__":
         employee_id = int(db_df.iloc[index]['id'])
 
         employees.append(SON({
-        "employee id": employee_id,
+        "_id": employee_id,
         "employee number": employee_id,
         "name": name,
         "branch": get_random(['A','B','C','D'])
