@@ -1,3 +1,4 @@
+from datetime import datetime
 from random import randint
 from math import floor
 from bson.son import SON
@@ -5,13 +6,16 @@ from pymongo import MongoClient
 from sets_splits import db_df
 
 def make_image_bson(employee_id,path,embedding,accuracy):
+    now=datetime.now().strftime('%Y %m %d %H %M %S').split(' ')
     return\
     SON({
         "employee id": employee_id,
         "file name": path.split('\\')[-1],
         "path": path,
         "accuracy": accuracy,
-        "embedding": SON({str(index):float(value) for index,value in enumerate(embedding)})
+        "embedding": SON({str(index): float(value) for index, value in enumerate(embedding)}),
+        "upload date": SON({"year":int(now[0]),"month":int(now[1]),"day":int(now[2])}),
+        "upload time":SON({"hour":int(now[3]),"minute":int(now[4]),"second":int(now[5])})
     })
 
 def make_day_bson(employee_id,year,month,day,entry_time=(8,0,0),exit_time=(17,0,0)):
@@ -45,6 +49,7 @@ if __name__ == "__main__":
     employees=list()
     images=list()
     attendance=list()
+
     for index,name in enumerate(db_df['name']):
 
         employee_id = int(db_df.iloc[index]['id'])
@@ -55,7 +60,6 @@ if __name__ == "__main__":
         "name": name,
         "branch": get_random(['A','B','C','D'])
         }))
-
 
         for embedding,path in zip(db_df.iloc[index]['embedding'],db_df.iloc[index]['path']):
             images.append(make_image_bson(employee_id,path,embedding,None))
