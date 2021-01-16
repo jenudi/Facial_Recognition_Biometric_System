@@ -4,12 +4,12 @@ from bson.son import SON
 from pymongo import MongoClient
 from sets_splits import db_df
 
-def make_image_bson(path,embedding,Accuracy):
+def make_image_bson(path,embedding,accuracy):
     return\
     SON({
         "file_name": path.split('\\')[-1],
         "path": path,
-        "Accuracy": Accuracy,
+        "accuracy": accuracy,
         "embedding": SON({str(index):float(value) for index,value in enumerate(embedding)})
     })
 
