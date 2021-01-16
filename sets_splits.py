@@ -12,12 +12,24 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 #%% classes for train set images, validation set images and test set images
 class image_in_set:
 
+    names_to_id_dict={}
+
     def __init__(self,path):
         self.values=cv.imread(path)
         self.path=path
         self.dir=self.path.split('\\')[-2]
-        self.person=' '.join(self.dir.split('_'))
         self.file_name=self.path.split('\\')[-1]
+        self.name=' '.join(self.dir.split('_'))
+        self.id=image_in_set.name_to_id(self.name)
+
+    @classmethod
+    def name_to_id(cls,name):
+        if name in cls.names_to_id_dict.keys():
+            return cls.names_to_id_dict[name]
+        else:
+            new_id=len(cls.names_to_id_dict.keys())+1
+            cls.names_to_id_dict[name]=new_id
+            return new_id
 
     def get_face_image(self):
         face_loc=face_locations(self.values)
@@ -26,7 +38,7 @@ class image_in_set:
         except IndexError:
             return None
         if (not face is None) and (not isinstance(face, type(None))) and len(face):
-            return face_image(face,self.person)
+            return face_image(face,self.name)
         else:
             return None
 
@@ -48,9 +60,9 @@ class image_in_set:
 
 class face_image(image_in_set):
 
-    def __init__(self,values,person):
+    def __init__(self,values,name):
         self.values=values
-        self.person=person
+        self.name=name
         self.path=None
 
 
@@ -132,7 +144,7 @@ for dir in directories:
         face=cur_image.get_face_image()
         if (face is None) or (isinstance(face, type(None))):
             images.remove(image_name)
-            print(' '.join(["No face detected for",cur_image.person]))
+            print(' '.join(["No face detected for",cur_image.name]))
             no_faces_detected.append(cur_image.path)
 
     cur_train_set= list()
@@ -225,32 +237,32 @@ facenet_model = load_model('facenet_keras.h5',compile=False)
 #all the images in the train, validation and test sets go through normalization
 #the normalization type is standardization that is done by substracting the train set mean and dividing by the train set STD
 #the normalized values are calculated by the normalize mothod
-train_df=pd.DataFrame(columns=['name', 'embedding', 'path'])
+train_df=pd.DataFrame(columns=['id', 'name', 'embedding', 'path'])
 for index,image_paths in enumerate(train_paths):
     cur_image = image_in_set(image_paths[0])
     cur_image_embedding=get_embedding(cur_image,"normalize_by_train_values",facenet_model,train_paths)
-    train_df.loc[index]=[cur_image.person, cur_image_embedding, image_paths[1]]
+    train_df.loc[index]=[cur_image.id, cur_image.name, cur_image_embedding, image_paths[1]]
 
-augmentation_df=pd.DataFrame(columns=['name', 'embedding'])
+augmentation_df=pd.DataFrame(columns=['id', 'name', 'embedding'])
 for index,image_path in enumerate(augmentation_paths):
     cur_image = image_in_set(image_path)
     cur_image_embedding=get_embedding(cur_image,"normalize_by_train_values",facenet_model,train_paths)
-    augmentation_df.loc[index]=[cur_image.person, cur_image_embedding]
+    augmentation_df.loc[index]=[cur_image.id, cur_image.name, cur_image_embedding]
 
-validation_df=pd.DataFrame(columns=['name', 'embedding', 'path'])
+validation_df=pd.DataFrame(columns=['id', 'name', 'embedding', 'path'])
 for index,image_paths in enumerate(validation_paths):
     cur_image = image_in_set(image_paths[0])
     cur_image_embedding=get_embedding(cur_image,"normalize_by_train_values",facenet_model,train_paths)
-    validation_df.loc[index]=[cur_image.person, cur_image_embedding, image_paths[1]]
+    validation_df.loc[index]=[cur_image.id, cur_image.name, cur_image_embedding, image_paths[1]]
 
-test_df=pd.DataFrame(columns=['name', 'embedding', 'path'])
+test_df=pd.DataFrame(columns=['id', 'name', 'embedding', 'path'])
 for index,image_paths in enumerate(test_paths):
     cur_image = image_in_set(image_paths[0])
     cur_image_embedding=get_embedding(cur_image,"normalize_by_train_values",facenet_model,train_paths)
-    test_df.loc[index]=[cur_image.person, cur_image_embedding, image_paths[1]]
+    test_df.loc[index]=[cur_image.id, cur_image.name, cur_image_embedding, image_paths[1]]
 
 all_data_df = pd.concat([train_df,validation_df,test_df],ignore_index=True)
-db_df=all_data_df.groupby('name',as_index=False).aggregate({'embedding':list, 'path':list})
+db_df=all_data_df.groupby(['id','name'],as_index=False).aggregate({'embedding':list, 'path':list})
 
 train_df=pd.concat([train_df.drop('path',axis=1),augmentation_df],ignore_index=True)
 validation_df.drop('path',axis=1, inplace=True)
