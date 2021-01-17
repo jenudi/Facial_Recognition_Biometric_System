@@ -15,8 +15,8 @@ def make_image_bson(employee_id,path,embedding,recognized="not yet tested",accur
         "recognized": recognized,
         "accuracy": accuracy,
         "embedding": SON({str(index): float(value) for index, value in enumerate(embedding)}),
-        "upload date": SON({"year":int(now[0]),"month":int(now[1]),"day":int(now[2])}),
-        "upload time":SON({"hour":int(now[3]),"minute":int(now[4]),"second":int(now[5])})
+        "uploaded": SON({"date": SON({"year":int(now[0]),"month":int(now[1]),"day":int(now[2])}),
+                        "time":SON({"hour":int(now[3]),"minute":int(now[4]),"second":int(now[5])})})
     })
 
 def make_day_bson(employee_id,year,month,day,entry_time=(8,0,0),exit_time=(17,0,0)):
