@@ -30,7 +30,7 @@ def make_day_bson(employee_id,year,month,day,entry_time=(8,0,0),exit_time=(17,0,
 
     return \
     SON({
-        "_id": ''.join([str(employee_id),str(year),str(month),str(day)]),
+        "_id": '-'.join([str(employee_id),str(year),str(month),str(day)]),
         "employee id":employee_id,
         "date": SON({"year":year,"month":month,"day":day}),
         "entry": SON({"hour":entry_time[0],"minute":entry_time[1],"second":entry_time[2]}),
