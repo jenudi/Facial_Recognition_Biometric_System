@@ -12,7 +12,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 #%% classes for train set images, validation set images and test set images
 class image_in_set:
 
-    names_to_id_dict={}
+    name_to_id_dict=dict()
 
     def __init__(self,path):
         self.values=cv.imread(path)
@@ -24,11 +24,11 @@ class image_in_set:
 
     @classmethod
     def name_to_id(cls,name):
-        if name in cls.names_to_id_dict.keys():
-            return cls.names_to_id_dict[name]
+        if name in cls.name_to_id_dict.keys():
+            return cls.name_to_id_dict[name]
         else:
-            new_id=len(cls.names_to_id_dict.keys())+1
-            cls.names_to_id_dict[name]=new_id
+            new_id=len(cls.name_to_id_dict.keys())+1
+            cls.name_to_id_dict[name]=new_id
             return new_id
 
     def get_face_image(self):
