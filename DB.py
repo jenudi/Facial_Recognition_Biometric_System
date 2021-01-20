@@ -42,8 +42,9 @@ def get_random(list_of_values):
     rand_int=randint(1,100)
     if rand_int==100:
         return list_of_values[-1]
-    devide_by_len=round(100/len(list_of_values))
-    return list_of_values[floor(rand_int/devide_by_len)]
+    else:
+        devide_by_len=round(100/len(list_of_values))
+        return list_of_values[floor(rand_int/devide_by_len)]
 
 
 if __name__ == "__main__":
