@@ -30,11 +30,11 @@ def make_attendance_doc(employee_id,year,month,day,entry_time=(8,0,0),exit_time=
     return\
     SON({
         "_id": '-'.join([str(employee_id),str(year),str(month),str(day)]),
-        "employee id":employee_id,
-        "date": SON({"year":year,"month":month,"day":day}),
-        "entry": SON({"hour":entry_time[0],"minute":entry_time[1],"second":entry_time[2]}),
-        "exit": SON({"hour":exit_time[0],"minute":exit_time[1],"second":exit_time[2]}),
-        "total": SON({"hours":hours,"minutes":minutes,"seconds":seconds })
+        "employee id": employee_id,
+        "date": SON({"year": year,"month": month,"day": day}),
+        "entry": SON({"hour": entry_time[0],"minute": entry_time[1],"second": entry_time[2]}),
+        "exit": SON({"hour": exit_time[0],"minute": exit_time[1],"second": exit_time[2]}),
+        "total": SON({"hours": hours,"minutes": minutes,"seconds": seconds })
     })
 
 
@@ -62,6 +62,7 @@ if __name__ == "__main__":
         "employee number": employee_id,
         "name": name,
         "branch": get_random(['A','B','C','D']),
+        "admin": False,
         "images paths": db_df.iloc[index]['path']
         }))
 
@@ -70,6 +71,10 @@ if __name__ == "__main__":
 
         attendance.append(make_attendance_doc(employee_id,2021,1,1))
         attendance.append(make_attendance_doc(employee_id,2021,1,2,(8,randint(0,59),randint(0,59)),(17,randint(0,59),randint(0,59))))
+
+
+    for employee_index in range(10):
+        employees[employee_index]["admin"]=True
 
 
     client = MongoClient('mongodb://localhost:27017/')

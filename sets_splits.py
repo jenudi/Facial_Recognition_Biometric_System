@@ -99,7 +99,7 @@ def get_embedding(cur_image, normalization_method, model, train_paths_list=None)
 
 dataset_dir=input("Please enter the dataset directory path")
 
-augmentation_num = 20
+number_of_train_images = 100
 
 os.chdir(dataset_dir)
 directories = [dir for dir in os.listdir(dataset_dir) if not '.' in dir] #directories contain all the people that have images in the dataset
@@ -178,10 +178,12 @@ for dir in directories:
         train_paths.append((new_path, old_path))
 
         image_for_aug = new_train_image.values.reshape((1,) + new_train_image.values.shape)
+
+        number_of_augmentations=(number_of_train_images-len(cur_train_set))/len(cur_train_set)
         i=0
         for batch in datagen.flow(image_for_aug, batch_size=1, save_to_dir=new_train_dir, save_prefix='aug', save_format='jpg'):
             i += 1
-            if i == augmentation_num:
+            if i ==number_of_augmentations:
                 break
 
     for new_validation_image in cur_validation_set:
