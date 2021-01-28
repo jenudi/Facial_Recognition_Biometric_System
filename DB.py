@@ -3,7 +3,7 @@ from random import randint
 from math import floor
 from bson.son import SON
 from pymongo import MongoClient
-from sets_splits import db_df
+from images_sets_directories import db_df
 
 
 def make_image_doc(path,embedding,recognized="not yet tested",accuracy="not yet tested"):
