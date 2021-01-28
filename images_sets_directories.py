@@ -52,7 +52,7 @@ for dir in directories:
     #if a person has 3 images 1 image will be in the train, validation and test set
     #if a person has more than 3 50 % of the images will be in the train set and 25% and 25% will be in the validation and test set
     for image_name in images:
-        cur_image=image_in_set(''.join([dir_path, '\\', image_name]))
+        cur_image=image_in_set('\\'.join([dir_path, image_name]))
         face=cur_image.get_face_image()
         if (face is None) or (isinstance(face, type(None))):
             images.remove(image_name)
@@ -64,28 +64,28 @@ for dir in directories:
     cur_validation_set = list()
 
     if len(images)==2:
-        cur_train_set.append(image_in_set(''.join([dir_path, '\\', images[0]])))
-        cur_test_set.append(image_in_set(''.join([dir_path, '\\', images[1]])))
+        cur_train_set.append(image_in_set('\\'.join([dir_path, images[0]])))
+        cur_test_set.append(image_in_set('\\'.join([dir_path, images[1]])))
     elif len(images)==3:
-        cur_train_set.append(image_in_set(''.join([dir_path, '\\', images[0]])))
-        cur_validation_set.append(image_in_set(''.join([dir_path, '\\', images[1]])))
-        cur_test_set.append(image_in_set(''.join([dir_path, '\\', images[2]])))
+        cur_train_set.append(image_in_set('\\'.join([dir_path, images[0]])))
+        cur_validation_set.append(image_in_set('\\'.join([dir_path, images[1]])))
+        cur_test_set.append(image_in_set('\\'.join([dir_path, images[2]])))
     elif len(images)>3:
-        cur_train_set=[image_in_set(''.join([dir_path, '\\', cur_image])) for cur_image in images[:math.ceil(len(images)*0.5)]]
-        cur_validation_set=[image_in_set(''.join([dir_path, '\\', cur_image])) for cur_image in images[math.ceil(len(images)*0.5):round(len(images)*0.75)]]
-        cur_test_set=[image_in_set(''.join([dir_path, '\\', cur_image])) for cur_image in images[round(len(images) * 0.75):]]
+        cur_train_set=[image_in_set('\\'.join([dir_path, cur_image])) for cur_image in images[:math.ceil(len(images)*0.5)]]
+        cur_validation_set=[image_in_set('\\'.join([dir_path, cur_image])) for cur_image in images[math.ceil(len(images)*0.5):round(len(images)*0.75)]]
+        cur_test_set=[image_in_set('\\'.join([dir_path, cur_image])) for cur_image in images[round(len(images) * 0.75):]]
 
     #every image that goes to the train set generates 5 new augmentad images
     #the image face locations are saved by the method get_face_image
     number_of_train_images_per_person = 100
     number_of_augmentations_per_train_image = (number_of_train_images_per_person - len(cur_train_set)) / len(cur_train_set)
     for new_train_image in cur_train_set:
-        new_train_dir=''.join([train_dir, '\\', dir])
+        new_train_dir='\\'.join([train_dir, dir])
         if not os.path.isdir(new_train_dir):
             os.mkdir(new_train_dir)
         new_face_image = new_train_image.get_face_image()
         new_face_image.resize_image()
-        new_path=''.join([train_dir, '\\', dir, '\\', new_train_image.file_name])
+        new_path='\\'.join([train_dir, dir, new_train_image.file_name])
         old_path=new_train_image.path
         new_face_image.save(new_path)
         train_paths.append((new_path, old_path))
@@ -99,35 +99,35 @@ for dir in directories:
                 break
 
     for new_validation_image in cur_validation_set:
-        new_validation_dir=''.join([validation_dir, '\\', dir])
+        new_validation_dir='\\'.join([validation_dir, dir])
         if not os.path.isdir(new_validation_dir):
             os.mkdir(new_validation_dir)
         new_face_image = new_validation_image.get_face_image()
         new_face_image.resize_image()
-        new_path=''.join([validation_dir, '\\', dir, '\\', new_validation_image.file_name])
+        new_path='\\'.join([validation_dir, dir, new_validation_image.file_name])
         old_path=new_validation_image.path
         new_face_image.save(new_path)
         validation_paths.append((new_path, old_path))
 
     for new_test_image in cur_test_set:
-        new_test_dir=''.join([test_dir, '\\', dir])
+        new_test_dir='\\'.join([test_dir, dir])
         if not os.path.isdir(new_test_dir):
             os.mkdir(new_test_dir)
         new_face_image = new_test_image.get_face_image()
         new_face_image.resize_image()
-        new_path=''.join([test_dir, '\\', dir, '\\', new_test_image.file_name])
+        new_path='\\'.join([test_dir, dir, new_test_image.file_name])
         old_path=new_test_image.path
         new_face_image.save(new_path)
         test_paths.append((new_path, old_path))
 
 train_directories = [dir for dir in os.listdir(train_dir) if not '.' in dir]
 for dir in train_directories:
-    dir_path=''.join([train_dir, '\\', dir])
+    dir_path='\\'.join([train_dir, dir])
     files = os.listdir(dir_path)
     augmentation_images=[file for file in files if ((len(file.split('.'))==2) and (file.split('.')[1] in ['jpg', 'jpeg', 'png']) and file.split('_')[0]=='aug') ]
 
     for cur_image in augmentation_images:
-        new_augmentation_image=image_in_set(''.join([dir_path, '\\', cur_image]))
+        new_augmentation_image=image_in_set('\\'.join([dir_path, cur_image]))
         new_face_image=new_augmentation_image.get_face_image()
         os.remove(new_augmentation_image.path)
         if (new_face_image is None) or (isinstance(new_face_image, type(None))) or\
@@ -138,9 +138,9 @@ for dir in train_directories:
             new_face_image.save(new_augmentation_image.path)
             augmentation_paths.append(new_face_image.path)
 
-no_faces_detected_dir=''.join([dataset_dir, '\\', 'no faces detected'])
+no_faces_detected_dir='\\'.join([dataset_dir, 'no faces detected'])
 if not os.path.isdir(no_faces_detected_dir):
     os.mkdir(no_faces_detected_dir)
 for image_path in no_faces_detected:
     no_face_image=image_in_set(image_path)
-    no_face_image.save(''.join([no_faces_detected_dir, '\\', no_face_image.file_name]))
+    no_face_image.save('\\'.join([no_faces_detected_dir, no_face_image.file_name]))

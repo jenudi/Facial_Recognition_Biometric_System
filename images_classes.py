@@ -2,6 +2,7 @@ from face_recognition import face_locations
 import cv2 as cv
 import numpy as np
 
+
 class image_in_set:
 
     name_to_id_dict=dict()
@@ -49,6 +50,34 @@ class image_in_set:
     def resize_image(self):
         self.values = cv.resize(self.values, (160, 160))
 
+    def get_embedding(self, normalization_method, model, train_paths_list=None):
+        if normalization_method == "normalize_by_train_values":
+            assert (not train_paths_list is None) or (not isinstance(face, type(None))), "enter train paths list in order to use the normalize by train values method"
+            norm_values = self.normalize_by_train_values(train_paths_list).astype("float32")
+        else:
+            norm_values = self.normalize_by_image_values()
+        four_dim_values = np.expand_dims(norm_values, axis=0)
+        embedding = model.predict(four_dim_values)[0]
+        return embedding
+
+
+class captured_frame(image_in_set):
+
+    def __init__(self,values):
+        self.values=values
+        self.name=None
+        self.path=None
+        self.face_image=self.get_face_image
+        if ((face_image is not None) and not (isinstance(face_image, type(None)))):
+            self.face_detected=True
+        else:
+            self.face_detected=False
+
+    def set_name(self,name):
+        self.name=name
+        if ((self.face_image is not None) and not (isinstance(self.face_image, type(None)))):
+            self.face_image.name=name
+
 
 class face_image(image_in_set):
 
@@ -56,6 +85,7 @@ class face_image(image_in_set):
         self.values=values
         self.name=name
         self.path=None
+
 
 def get_images_mean(paths_list):
     assert len(paths_list), "paths list must not be empty"
