@@ -1,16 +1,14 @@
 import os
 import shutil
 import math
-from augmentation import *
 from images_classes import *
+from augmentation import *
 
 
 #all the train set images are saved in a list which is a class variable. this list is used in order or extract the mean and std of the
 #train set images for normalization for the rest of the images
 dataset_dir = input("Please enter the dataset directory path")
 os.chdir(dataset_dir)
-
-number_of_train_images_per_person = 100
 
 directories = [dir for dir in os.listdir(dataset_dir) if not '.' in dir] #directories contain all the people that have images in the dataset
 
@@ -79,9 +77,10 @@ for dir in directories:
 
     #every image that goes to the train set generates 5 new augmentad images
     #the image face locations are saved by the method get_face_image
+    number_of_train_images_per_person = 100
+    number_of_augmentations_per_train_image = (number_of_train_images_per_person - len(cur_train_set)) / len(cur_train_set)
     for new_train_image in cur_train_set:
         new_train_dir=''.join([train_dir, '\\', dir])
-
         if not os.path.isdir(new_train_dir):
             os.mkdir(new_train_dir)
         new_face_image = new_train_image.get_face_image()
@@ -93,11 +92,10 @@ for dir in directories:
 
         image_for_aug = new_train_image.values.reshape((1,) + new_train_image.values.shape)
 
-        number_of_augmentations=(number_of_train_images_per_person-len(cur_train_set))/len(cur_train_set)
         i=0
         for batch in datagen.flow(image_for_aug, batch_size=1, save_to_dir=new_train_dir, save_prefix='aug', save_format='jpg'):
             i += 1
-            if i ==number_of_augmentations:
+            if i ==number_of_augmentations_per_train_image:
                 break
 
     for new_validation_image in cur_validation_set:
