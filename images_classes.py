@@ -52,7 +52,7 @@ class image_in_set:
 
     def get_embedding(self, normalization_method, model, train_paths_list=None):
         if normalization_method == "normalize_by_train_values":
-            assert (not train_paths_list is None) or (not isinstance(face, type(None))), "enter train paths list in order to use the normalize by train values method"
+            assert (not train_paths_list is None) or (not isinstance(train_paths_list, type(None))), "enter train paths list in order to use the normalize by train values method"
             norm_values = self.normalize_by_train_values(train_paths_list).astype("float32")
         else:
             norm_values = self.normalize_by_image_values()
