@@ -87,5 +87,5 @@ if __name__ == "__main__":
         images_collection = biometric_system_db["images"]
         images_collection.insert_many(images)
 
-        images_collection = biometric_system_db["attendance"]
-        images_collection.insert_many(attendance)
+        attendance_collection = biometric_system_db["attendance"]
+        attendance_collection.insert_many(attendance)
