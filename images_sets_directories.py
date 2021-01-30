@@ -52,7 +52,7 @@ for dir in directories:
     #if a person has 3 images 1 image will be in the train, validation and test set
     #if a person has more than 3 50 % of the images will be in the train set and 25% and 25% will be in the validation and test set
     for image_name in images:
-        cur_image=image_in_set('\\'.join([dir_path, image_name]))
+        cur_image=Image_in_set('\\'.join([dir_path, image_name]))
         face=cur_image.get_face_image()
         if (face is None) or (isinstance(face, type(None))):
             images.remove(image_name)
@@ -64,21 +64,21 @@ for dir in directories:
     cur_validation_set = list()
 
     if len(images)==2:
-        cur_train_set.append(image_in_set('\\'.join([dir_path, images[0]])))
-        cur_test_set.append(image_in_set('\\'.join([dir_path, images[1]])))
+        cur_train_set.append(Image_in_set('\\'.join([dir_path, images[0]])))
+        cur_test_set.append(Image_in_set('\\'.join([dir_path, images[1]])))
     elif len(images)==3:
-        cur_train_set.append(image_in_set('\\'.join([dir_path, images[0]])))
-        cur_validation_set.append(image_in_set('\\'.join([dir_path, images[1]])))
-        cur_test_set.append(image_in_set('\\'.join([dir_path, images[2]])))
+        cur_train_set.append(Image_in_set('\\'.join([dir_path, images[0]])))
+        cur_validation_set.append(Image_in_set('\\'.join([dir_path, images[1]])))
+        cur_test_set.append(Image_in_set('\\'.join([dir_path, images[2]])))
     elif len(images)>3:
-        cur_train_set=[image_in_set('\\'.join([dir_path, cur_image])) for cur_image in images[:math.ceil(len(images)*0.5)]]
-        cur_validation_set=[image_in_set('\\'.join([dir_path, cur_image])) for cur_image in images[math.ceil(len(images)*0.5):round(len(images)*0.75)]]
-        cur_test_set=[image_in_set('\\'.join([dir_path, cur_image])) for cur_image in images[round(len(images) * 0.75):]]
+        cur_train_set=[Image_in_set('\\'.join([dir_path, cur_image])) for cur_image in images[:math.ceil(len(images)*0.5)]]
+        cur_validation_set=[Image_in_set('\\'.join([dir_path, cur_image])) for cur_image in images[math.ceil(len(images)*0.5):round(len(images)*0.75)]]
+        cur_test_set=[Image_in_set('\\'.join([dir_path, cur_image])) for cur_image in images[round(len(images) * 0.75):]]
 
     #every image that goes to the train set generates 5 new augmentad images
     #the image face locations are saved by the method get_face_image
     number_of_train_images_per_person = 100
-    number_of_augmentations_per_train_image = (number_of_train_images_per_person - len(cur_train_set)) / len(cur_train_set)
+    number_of_augmentations_per_train_image = round((number_of_train_images_per_person - len(cur_train_set)) / len(cur_train_set))
     for new_train_image in cur_train_set:
         new_train_dir='\\'.join([train_dir, dir])
         if not os.path.isdir(new_train_dir):
@@ -95,7 +95,7 @@ for dir in directories:
         i=0
         for batch in datagen.flow(image_for_aug, batch_size=1, save_to_dir=new_train_dir, save_prefix='aug', save_format='jpg'):
             i += 1
-            if i ==number_of_augmentations_per_train_image:
+            if i>= number_of_augmentations_per_train_image:
                 break
 
     for new_validation_image in cur_validation_set:
@@ -127,7 +127,7 @@ for dir in train_directories:
     augmentation_images=[file for file in files if ((len(file.split('.'))==2) and (file.split('.')[1] in ['jpg', 'jpeg', 'png']) and file.split('_')[0]=='aug') ]
 
     for cur_image in augmentation_images:
-        new_augmentation_image=image_in_set('\\'.join([dir_path, cur_image]))
+        new_augmentation_image=Image_in_set('\\'.join([dir_path, cur_image]))
         new_face_image=new_augmentation_image.get_face_image()
         os.remove(new_augmentation_image.path)
         if (new_face_image is None) or (isinstance(new_face_image, type(None))) or\
@@ -143,5 +143,5 @@ no_faces_detected_dir='\\'.join([dataset_dir, 'no faces detected'])
 if not os.path.isdir(no_faces_detected_dir):
     os.mkdir(no_faces_detected_dir)
 for image_path in no_faces_detected:
-    no_face_image=image_in_set(image_path)
+    no_face_image=Image_in_set(image_path)
     no_face_image.save('\\'.join([no_faces_detected_dir, no_face_image.file_name]))

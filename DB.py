@@ -74,7 +74,7 @@ if __name__ == "__main__":
         attendance.append(make_attendance_doc(employee_id,2021,1,2,(8,randint(0,59),randint(0,59)),(17,randint(0,59),randint(0,59))))
 
 
-    for employee_index in range(10):
+    for employee_index in range(round(len(employees)/10)):
         employees[employee_index]["admin"]=True
 
 

@@ -15,25 +15,25 @@ facenet_model = load_model('facenet_keras.h5',compile=False)
 #the normalized values are calculated by the normalize mothod
 train_df=pd.DataFrame(columns=['id', 'name', 'embedding', 'path'])
 for index,image_paths in enumerate(train_paths):
-    cur_image = image_in_set(image_paths[0])
+    cur_image = Image_in_set(image_paths[0])
     cur_image_embedding=cur_image.get_embedding("normalize_by_train_values",facenet_model,train_paths)
     train_df.loc[index]=[cur_image.id, cur_image.name, cur_image_embedding, image_paths[1]]
 
 augmentation_df=pd.DataFrame(columns=['id', 'name', 'embedding'])
 for index,image_path in enumerate(augmentation_paths):
-    cur_image = image_in_set(image_path)
+    cur_image = Image_in_set(image_path)
     cur_image_embedding=cur_image.get_embedding("normalize_by_train_values",facenet_model,train_paths)
     augmentation_df.loc[index]=[cur_image.id, cur_image.name, cur_image_embedding]
 
 validation_df=pd.DataFrame(columns=['id', 'name', 'embedding', 'path'])
 for index,image_paths in enumerate(validation_paths):
-    cur_image = image_in_set(image_paths[0])
+    cur_image = Image_in_set(image_paths[0])
     cur_image_embedding=cur_image.get_embedding("normalize_by_train_values",facenet_model,train_paths)
     validation_df.loc[index]=[cur_image.id, cur_image.name, cur_image_embedding, image_paths[1]]
 
 test_df=pd.DataFrame(columns=['id', 'name', 'embedding', 'path'])
 for index,image_paths in enumerate(test_paths):
-    cur_image = image_in_set(image_paths[0])
+    cur_image = Image_in_set(image_paths[0])
     cur_image_embedding=cur_image.get_embedding("normalize_by_train_values",facenet_model,train_paths)
     test_df.loc[index]=[cur_image.id, cur_image.name, cur_image_embedding, image_paths[1]]
 

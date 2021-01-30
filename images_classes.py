@@ -3,7 +3,7 @@ import cv2 as cv
 import numpy as np
 
 
-class image_in_set:
+class Image_in_set:
 
     name_to_id_dict=dict()
 
@@ -13,7 +13,7 @@ class image_in_set:
         self.dir=self.path.split('\\')[-2]
         self.file_name=self.path.split('\\')[-1]
         self.name=' '.join(self.dir.split('_'))
-        self.id=image_in_set.name_to_id(self.name)
+        self.id=Image_in_set.name_to_id(self.name)
 
     @classmethod
     def name_to_id(cls,name):
@@ -31,7 +31,7 @@ class image_in_set:
         except IndexError:
             return None
         if (not face is None) and (not isinstance(face, type(None))) and len(face):
-            return face_image(face,self.name)
+            return Face_image(face,self.name)
         else:
             return None
 
@@ -61,14 +61,14 @@ class image_in_set:
         return embedding
 
 
-class captured_frame(image_in_set):
+class Captured_frame(Image_in_set):
 
     def __init__(self,values):
         self.values=values
         self.name=None
         self.path=None
         self.face_image=self.get_face_image
-        if ((face_image is not None) and not (isinstance(face_image, type(None)))):
+        if ((self.face_image is not None) and not (isinstance(self.face_image, type(None)))):
             self.face_detected=True
         else:
             self.face_detected=False
@@ -79,7 +79,7 @@ class captured_frame(image_in_set):
             self.face_image.name=name
 
 
-class face_image(image_in_set):
+class Face_image(Image_in_set):
 
     def __init__(self,values,name):
         self.values=values
@@ -91,7 +91,7 @@ def get_images_mean(paths_list):
     assert len(paths_list), "paths list must not be empty"
     train_mean=list()
     for path in paths_list:
-        train_image=image_in_set(path[0])
+        train_image=Image_in_set(path[0])
         train_mean.append(train_image.values)
     return np.mean(train_mean, axis=(0, 1, 2))
 
@@ -99,6 +99,6 @@ def get_images_std(paths_list):
     assert len(paths_list), "paths list must not be empty"
     train_std=list()
     for path in paths_list:
-        train_image=image_in_set(path[0])
+        train_image=Image_in_set(path[0])
         train_std.append(train_image.values)
     return np.std(train_std,axis=(0,1,2))
