@@ -68,10 +68,7 @@ class Captured_frame(Image_in_set):
         self.name=None
         self.path=None
         self.face_image=self.get_face_image
-        if ((self.face_image is not None) and not (isinstance(self.face_image, type(None)))):
-            self.face_detected=True
-        else:
-            self.face_detected=False
+        self.face_detected=True if (self.face_image is not None) and not (isinstance(self.face_image, type(None))) else False
 
     def set_name(self,name):
         self.name=name
