@@ -5,10 +5,11 @@ import torch.optim as optim
 import pandas as pd
 import torchvision.transforms as transforms
 from torch.nn import functional as F
-
+import ast
+import numpy as np
 
 class DataArgs:
-    def __init__(self, csv_path='mini data/datasets/'):
+    def __init__(self, csv_path='mini data/sets_csv_files/'):
         self.csv_path = csv_path
         self.train = self.csv_path + 'train.csv'
         self.val = self.csv_path + 'validation.csv'
@@ -22,47 +23,92 @@ class DataArgs:
         # Hyper-parameters
         self.in_channel = 1
         self.learning_rate = 1e-3
-        self.train_batch_size = 100
+        self.train_batch_size = 5
         self.num_epochs = 50
 
 
 # Set Dataset
 class TabularDataset(Dataset):
-    def __init__(self, csv_file, transform=None):  # train=False
-        self.csv_file = pd.read_csv(csv_file)
+    def __init__(self, values, transform=None):  # train=False
+        self.values = values
         self.transform = transform
 
     def __getitem__(self, index):
-        value = self.csv_file.iloc[index, 1]
+        x = self.values[index][2]
+        x = np.array(ast.literal_eval(','.join(x.split())))
+        x = torch.tensor(x)
         if self.transform:
-            value = self.transform(value)
-        y = torch.tensor(self.csv_file.iloc[index, 0])
+            x = self.transform(x)
+        y = torch.tensor(self.values[index, 0])
         y = y.to(torch.float32)
-        return value, y
+        return x, y
 
     def __len__(self):
-        return len(self.csv_file)
+        return len(self.values)
 
 
 # Model
 class Net(nn.Module):
-
     def __init__(self):
         super(Net, self).__init__()
+
         self.fc1 = nn.Linear(1, 100)
-        self.fc2 = nn.Linear(100)
+        self.fc2 = nn.Linear(100,100)
         self.fc3 = nn.Linear(100, 10)
 
-    def forward(self, x):
-        x = F.relu(self.fc1(x))
+    def forward(self, input):
+
+        x = F.relu(self.fc1(input))
         x = F.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = F.softmax(self.fc3(x))
         return x
 
 
 args = DataArgs()
-train_dataset = TabularDataset(csv_file=args.csv_path, transform= transforms.ToTensor())
+train_dataset = TabularDataset(values=pd.read_csv(args.train).values, transform=None)
 train_loader = DataLoader(dataset=train_dataset, batch_size=args.train_batch_size, shuffle=True)
+
+
+class Ann:
+    def __init__(self, args, train_loader):
+        self.args = args
+        self.use_cuda = torch.cuda.is_available()
+        self.device = torch.device("cuda" if self.use_cuda else "cpu")
+        self.model = Net()
+        self.optimizer = self.optimizer()
+        self.train_loader = train_loader
+
+    def optimizer(self):
+        return optim.SGD(self.model.parameters(), lr=self.args.learning_rate, momentum=0.99)
+
+    def main(self):
+        print('Starting')
+        for epoch_ndx in range(1, self.args.num_epochs + 1):
+            self.training(epoch_ndx)
+        print("Finished: Ranzcr.main()")
+
+
+    def training(self, epoch_ndx):
+        self.model.train()
+        for batch_ndx, batch_tup in enumerate(self.train_loader):
+            self.optimizer.zero_grad()
+            loss = self.compute_batch_loss(batch_tup)
+            print(f"E: {epoch_ndx}, batch: {batch_ndx}, loss: {loss}")
+            loss.backward()
+            self.optimizer.step()
+
+    def compute_batch_loss(self, batch_tup):
+        # self.train_loader.batch_size
+        input_t, label_t = batch_tup
+        input_g = input_t.to(self.device)
+        label_g = label_t.to(self.device)
+        logits_g = self.model(input_g) #probability_g
+        loss_func = nn.CrossEntropyLoss(reduction='none')
+        loss_g = loss_func(logits_g, label_g)
+        return loss_g.mean()
+
+
+
 
 
 #%% Train Function
