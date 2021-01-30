@@ -131,7 +131,8 @@ for dir in train_directories:
         new_face_image=new_augmentation_image.get_face_image()
         os.remove(new_augmentation_image.path)
         if (new_face_image is None) or (isinstance(new_face_image, type(None))) or\
-        (new_face_image.values.shape[0]<80) or (new_face_image.values.shape[1]<80) or (abs(new_face_image.values.shape[0]-new_face_image.values.shape[1])>80):
+        (new_face_image.values.shape[0]<80) or (new_face_image.values.shape[1]<80) or\
+        (abs(new_face_image.values.shape[0]-new_face_image.values.shape[1])>80):
             continue
         else:
             new_face_image.resize_image()

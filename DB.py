@@ -6,11 +6,12 @@ from pymongo import MongoClient
 from facenet_embeddings import db_df
 
 
-def make_image_doc(path,embedding,recognized="not yet tested",accuracy="not yet tested"):
+def make_image_doc(path, employee_id, embedding,recognized="not yet tested",accuracy="not yet tested"):
     now=datetime.now().strftime('%Y %m %d %H %M %S').split(' ')
     return\
     SON({
         "_id": path,
+        "employee id": employee_id,
         "recognized": recognized,
         "accuracy": accuracy,
         "embedding": list(map(float,embedding)),
@@ -67,7 +68,7 @@ if __name__ == "__main__":
         }))
 
         for embedding,path in zip(db_df.iloc[index]['embedding'],db_df.iloc[index]['path']):
-            images.append(make_image_doc(path,embedding))
+            images.append(make_image_doc(path,employee_id,embedding))
 
         attendance.append(make_attendance_doc(employee_id,2021,1,1))
         attendance.append(make_attendance_doc(employee_id,2021,1,2,(8,randint(0,59),randint(0,59)),(17,randint(0,59),randint(0,59))))
