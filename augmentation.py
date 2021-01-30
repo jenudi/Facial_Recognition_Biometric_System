@@ -3,6 +3,7 @@ import numpy as np
 import random
 from keras.preprocessing.image import ImageDataGenerator
 from skimage.util import random_noise
+import imgaug.augmenters as iaa
 
 #filters and noise are randomly added to the augmentation images
 
@@ -80,3 +81,28 @@ datagen = ImageDataGenerator(
     fill_mode = 'reflect', #may also try nearest, constant, reflect, wrap. when using 'constant' we should add 'cval' value of 125
     preprocessing_function=preprocessing_for_augmentation
 )
+
+
+
+def aug_img(img):
+    img = np.expand_dims(img, axis=0)
+    one = iaa.OneOf([iaa.Affine(scale=(0.9,1.1),mode='constant'),
+                     iaa.Affine(translate_percent={"x": (-0.1, 0.1), "y": (-0.1, 0.1)},mode='constant'),
+                     iaa.Affine(rotate=(-5, 5),mode='constant'),
+                     iaa.Affine(shear=(-6, 6),mode='constant'),
+                     iaa.ScaleX((0.9, 1.1)),
+                     iaa.ScaleY((0.9, 1.1)),
+                     iaa.PerspectiveTransform(scale=(0.01, 0.05))])
+    two = iaa.OneOf([iaa.AdditiveGaussianNoise(scale=(0, 0.1*255)),
+                     iaa.AdditiveLaplaceNoise(scale=(0, 0.1 * 255)),
+                     #iaa.Cutout(nb_iterations=1,size=0.1, squared=False,fill_mode="gaussian"),
+                     #iaa.CoarseDropout(0.01, size_percent=0.9),
+                    iaa.Salt(0.05)])
+    three = iaa.OneOf([iaa.GaussianBlur(sigma=1.0),
+                        iaa.imgcorruptlike.Fog(severity=1),
+                        iaa.imgcorruptlike.Spatter(severity=1)])
+    simetimes2 = iaa.Sometimes(0.05, two)
+    simetimes3 = iaa.Sometimes(0.05,three)
+    seq = iaa.Sequential([one,simetimes2,simetimes3],random_order=True)
+    images_aug = seq(images=img)
+    return images_aug[0]
