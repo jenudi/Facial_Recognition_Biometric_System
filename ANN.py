@@ -35,7 +35,7 @@ class TabularDataset(Dataset):
 
     def __getitem__(self, index):
         x = self.values[index][2]
-        x = np.array(ast.literal_eval(','.join(x.split())))
+        x = eval(x)
         x = torch.tensor(x)
         if self.transform:
             x = self.transform(x)

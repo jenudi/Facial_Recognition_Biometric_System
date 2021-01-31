@@ -83,7 +83,6 @@ datagen = ImageDataGenerator(
 )
 
 
-
 def aug_img(img):
     img = np.expand_dims(img, axis=0)
     one = iaa.OneOf([iaa.Affine(scale=(0.9,1.1),mode='constant'),
