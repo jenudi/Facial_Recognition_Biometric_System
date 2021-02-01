@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     while True:
         ret, frame = cap.read()
-        frame = captured_frame(cv.resize(frame, None, fx=0.5, fy=0.5,interpolation=cv.INTER_AREA))
+        frame = Captured_frame(cv.resize(frame, None, fx=0.5, fy=0.5,interpolation=cv.INTER_AREA))
         if frame.face_detected:
             frame.face_image.resize_image()
             frame_face_embedding=frame.face_image.get_embedding(facenet_model,"normalize_by_train_values",facenet_model,train_paths)

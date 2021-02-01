@@ -10,7 +10,7 @@ def make_image_doc(path, employee_id, embedding,recognized="not yet tested",accu
     now=datetime.now().strftime('%Y %m %d %H %M %S').split(' ')
     return\
     SON({
-        "_id": path,
+        "_id": path.split('\\')[-1],
         "employee id": employee_id,
         "recognized": recognized,
         "accuracy": accuracy,
@@ -64,7 +64,7 @@ if __name__ == "__main__":
         "name": name,
         "branch": get_random(['A','B','C','D']),
         "admin": False,
-        "images paths": db_df.iloc[index]['path']
+        "images directory path": '/'.join(db_df.iloc[index]['path'][0].split('\\')[:-1])
         }))
 
         for embedding,path in zip(db_df.iloc[index]['embedding'],db_df.iloc[index]['path']):
