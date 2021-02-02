@@ -37,7 +37,7 @@ def register_entry(id_detected,date_and_time,attendance_collection):
         attendance_collection.insert_one(attendence_insert)
 
 
-def register_entry(id_detected,date_and_time,attendance_collection):
+def register_exit(id_detected,date_and_time,attendance_collection):
 
     entry_query=attendance_collection.find(SON({"employee id": id_detected,
     "date": SON({"year": int(date_and_time[0]), "month": int(date_and_time[1]), "day": int(date_and_time[2])}),
