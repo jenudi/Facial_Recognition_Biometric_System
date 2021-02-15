@@ -28,16 +28,11 @@ def bileteral_filter(img):
     filtered_image = img.copy()
     return cv.bilateralFilter(filtered_image,5,125,100).astype(np.uint8)
 
-def laplacian_filter(img):
-    filtered_image = img.copy()
-    kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
-    return cv.filter2D(filtered_image, -1, kernel).astype(np.uint8)
-
 def add_filter(img):
     filters ={0:identity_filter, 1:identity_filter, 2:averageing_filter,
               3:gaussian_filter, 4:median_filter,
-              5:bileteral_filter, 6:laplacian_filter}
-    return filters[random.randint(0,6)](img)
+              5:bileteral_filter}
+    return filters[random.randint(0,5)](img)
 
 def salt_and_paper_noise(img):
     noisy_image=img.copy()
