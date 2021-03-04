@@ -1,17 +1,23 @@
 import cv2 as cv
 import os
+from pymongo import MongoClient
 from images_classes import *
 from images_sets_directories import train_paths
 from facenet_embeddings import facenet_model
-from DB import attendance_collection
 from datetime import datetime
 from bson.son import SON
 from random import randint,random
 
 
+client = MongoClient('mongodb://localhost:27017/')
+with client:
+    biometric_system_db = client["biometric_system"]
+    attendance_collection = biometric_system_db["attendance"]
+
+
 identification_threshold=9.0
 
-id_to_name_dict={value:key for key,value in image_in_set.name_to_id_dict.items()}
+id_to_name_dict={value:key for key,value in Image_in_set.name_to_id_dict.items()}
 
 
 def identify(frame_face_embedding,id_to_name_dict):
