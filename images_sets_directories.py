@@ -3,20 +3,22 @@ import shutil
 import math
 from images_classes import *
 from augmentation import *
+import pickle
 
 
 #all the train set images are saved in a list which is a class variable. this list is used in order or extract the mean and std of the
 #train set images for normalization for the rest of the images
+root_dir=os.getcwd()
 dataset_dir = input("Please enter the dataset directory path")
 os.chdir(dataset_dir)
 
 directories = [dir for dir in os.listdir(dataset_dir) if not '.' in dir] #directories contain all the people that have images in the dataset
 
 #new direstories are being made for the train, validation and test sets
-sets_dir=''.join([dataset_dir, '\\sets'])
-train_dir = ''.join([sets_dir, '\\train'])
-validation_dir = ''.join([sets_dir, '\\validation'])
-test_dir = ''.join([sets_dir, '\\test'])
+sets_dir='\\'.join([dataset_dir, 'sets'])
+train_dir = '\\'.join([sets_dir, 'train'])
+validation_dir = '\\'.join([sets_dir, 'validation'])
+test_dir = '\\'.join([sets_dir, 'test'])
 
 if os.path.isdir(sets_dir):
     delete_sets=None
@@ -41,7 +43,7 @@ augmentation_paths = list()
 no_faces_detected = list()
 
 for dir in directories:
-    dir_path=''.join([dataset_dir, '\\', dir])
+    dir_path='\\'.join([dataset_dir, dir])
     files = os.listdir(dir_path)
     images=[file for file in files if ((len(file.split('.')) == 2) and (file.split('.')[1] in ['jpg', 'jpeg', 'png']))] #contains all the images of the person in the current directory
     if len(images)<2:
@@ -120,6 +122,7 @@ for dir in directories:
         new_face_image.save(new_path)
         test_paths.append((new_path, old_path))
 
+
 train_directories = [dir for dir in os.listdir(train_dir) if not '.' in dir]
 for dir in train_directories:
     dir_path='\\'.join([train_dir, dir])
@@ -145,3 +148,7 @@ if not os.path.isdir(no_faces_detected_dir):
 for image_path in no_faces_detected:
     no_face_image=Image_in_set(image_path)
     no_face_image.save('\\'.join([no_faces_detected_dir, no_face_image.file_name]))
+
+os.chdir(root_dir)
+pickle.dump(Image_in_set.name_to_id_dict,open("name_to_id_dict.pkl","wb"))
+pickle.dump(train_paths,open("train_paths.pkl","wb"))

@@ -67,13 +67,19 @@ class Captured_frame(Image_in_set):
         self.values=values
         self.name=None
         self.path=None
-        self.face_image=self.get_face_image
-        self.face_detected=True if (self.face_image is not None) and not (isinstance(self.face_image, type(None))) else False
+        #self.face_image=None
+        #self.face_detected=False
 
     def set_name(self,name):
         self.name=name
         if ((self.face_image is not None) and not (isinstance(self.face_image, type(None)))):
             self.face_image.name=name
+
+'''
+    def set_face_image(self):
+        self.face_image=self.get_face_image()
+        self.face_detected=True if (self.face_image is not None) and not (isinstance(self.face_image, type(None))) else False
+'''
 
 
 class Face_image(Image_in_set):

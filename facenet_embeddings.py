@@ -6,8 +6,6 @@ from images_sets_directories import *
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
-os.chdir(dataset_dir)
-
 facenet_model = load_model('facenet_keras.h5',compile=False)
 
 #all the images in the train, validation and test sets go through normalization
@@ -51,4 +49,4 @@ train_df.to_csv(''.join([os.getcwd(),'\\train.csv']),index=False)
 validation_df.to_csv(''.join([os.getcwd(),'\\validation.csv']),index=False)
 test_df.to_csv(''.join([os.getcwd(),'\\test.csv']),index=False)
 
-os.chdir('../../')
+os.chdir(root_dir)
