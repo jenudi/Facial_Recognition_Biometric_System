@@ -1,11 +1,18 @@
-from face_recognition import face_locations
+#from face_recognition import face_locations
+from facenet_pytorch import MTCNN, InceptionResnetV1
 import cv2 as cv
 import numpy as np
+from random import randint,uniform
+
+
 
 
 class Image_in_set:
 
+    mtcnn = MTCNN(post_process=False, image_size=160)
+    face_recognition_model = InceptionResnetV1(pretrained='vggface2').eval()
     name_to_id_dict=dict()
+    image_size=(160,160)
 
     def __init__(self,path):
         self.values=cv.imread(path)
@@ -24,6 +31,7 @@ class Image_in_set:
             cls.name_to_id_dict[name]=new_id
             return new_id
 
+    '''
     def get_face_image(self):
         face_loc=face_locations(self.values)
         try:
@@ -32,6 +40,15 @@ class Image_in_set:
             return None
         if (not face is None) and (not isinstance(face, type(None))) and len(face):
             return Face_image(face,self.name)
+        else:
+            return None
+    '''
+
+    def get_face_image(self):
+        boxes, probs = Image_in_set.mtcnn.detect(self.values, landmarks=False)
+        if (not boxes is None) and (not isinstance(boxes, type(None))):
+            box=[int(b) for b in boxes[0]]
+            return Face_image(self.values[box[1]:box[3], box[0]:box[2]],self.name)
         else:
             return None
 
@@ -48,17 +65,18 @@ class Image_in_set:
         cv.imwrite(self.path, self.values)
 
     def resize_image(self):
-        self.values = cv.resize(self.values, (160, 160))
+        self.values = cv.resize(self.values, Image_in_set.image_size)
 
-    def get_embedding(self, normalization_method, model, train_paths_list=None):
+    def get_embedding(self, normalization_method, train_paths_list=None):
         if normalization_method == "normalize_by_train_values":
             assert (not train_paths_list is None) or (not isinstance(train_paths_list, type(None))), "enter train paths list in order to use the normalize by train values method"
             norm_values = self.normalize_by_train_values(train_paths_list).astype("float32")
         else:
             norm_values = self.normalize_by_image_values()
-        four_dim_values = np.expand_dims(norm_values, axis=0)
-        embedding = model.predict(four_dim_values)[0]
-        return embedding
+        #four_dim_values = np.expand_dims(norm_values, axis=0)
+        #embedding = model.predict(four_dim_values)[0]
+        embedding = Image_in_set.face_recognition_model(norm_values.unsqueeze(0))
+        return embedding.detach()
 
 
 class Captured_frame(Image_in_set):
@@ -67,19 +85,22 @@ class Captured_frame(Image_in_set):
         self.values=values
         self.name=None
         self.path=None
-        #self.face_image=None
-        #self.face_detected=False
+        self.face_image=None
+        self.face_detected=False
+        self.id_detected=None
+        self.identification_probability=None
 
-    def set_name(self,name):
-        self.name=name
-        if ((self.face_image is not None) and not (isinstance(self.face_image, type(None)))):
-            self.face_image.name=name
-
-'''
     def set_face_image(self):
         self.face_image=self.get_face_image()
         self.face_detected=True if (self.face_image is not None) and not (isinstance(self.face_image, type(None))) else False
-'''
+
+    def identify(self,normalize_method,train_paths):
+        if not self.face_detected:
+            raise FrameException("face must be detected in order to identify")
+        face_embedding = self.face_image.get_embedding(normalize_method, train_paths)
+        self.id_detected = randint(1, len(Image_in_set.id_to_name_dict.keys()))
+        self.identification_probability = uniform(8.0, 1.0)
+
 
 
 class Face_image(Image_in_set):
@@ -105,3 +126,7 @@ def get_images_std(paths_list):
         train_image=Image_in_set(path[0])
         train_std.append(train_image.values)
     return np.std(train_std,axis=(0,1,2))
+
+
+class FrameException(Exception):
+    pass

@@ -6,8 +6,6 @@ from pymongo import MongoClient
 from images_classes import *
 from datetime import datetime
 from bson.son import SON
-from random import randint,uniform
-
 
 
 client = MongoClient('mongodb://localhost:27017/')
@@ -16,22 +14,12 @@ with client:
     attendance_collection = biometric_system_db["attendance"]
 
 
-facenet_model = load_model('facenet_keras.h5',compile=False)
-
-name_to_id_dict=pickle.load(open("name_to_id_dict.pkl","rb"))
-
 id_to_name_dict={value:key for key,value in Image_in_set.name_to_id_dict.items()}
 
 train_paths=pickle.load(open("train_paths.pkl","rb"))
 
 
 identification_threshold=9.0
-
-
-def identify(frame_face_embedding,id_to_name_dict):
-    id_detected=randint(1,len(id_to_name_dict.keys()))
-    identification_probability=uniform(8.0,1.0)
-    return (id_detected,identification_probability)
 
 
 def register_entry(id_detected,date_and_time,attendance_collection):
@@ -84,15 +72,13 @@ if __name__ == "__main__":
     while True:
         ret, frame = cap.read()
         frame = Captured_frame(cv.resize(frame, None, fx=0.5, fy=0.5,interpolation=cv.INTER_AREA))
-        frame_face=frame.get_face_image()
-        frame_face_detected=True if (frame_face is not None) and not (isinstance(frame_face, type(None))) else False
-        if frame_face_detected:
-            frame_face.resize_image()
-            frame_face_embedding=frame_face.get_embedding("normalize_by_train_values",facenet_model,train_paths)
-            (id_detected,identification_probability)=identify(frame_face_embedding,id_to_name_dict)
-            if identification_probability>identification_threshold:
+        frame.set_face_image()
+        if frame.face_detected:
+            #frame.face_image.resize_image()
+            frame.identify("normalize_by_train_values",train_paths)
+            if frame.identification_probability>identification_threshold:
                 now = datetime.now().strftime('%Y %m %d %H %M %S').split(' ')
-                register_entry(id_detected,now,attendance_collection)
+                register_entry(frame.id_detected,now,attendance_collection)
             frame_title="Face detected"
         else:
             frame_title="No face detected"
