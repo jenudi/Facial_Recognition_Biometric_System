@@ -144,12 +144,13 @@ for dir in train_directories:
             augmentation_paths.append(new_face_image.path)
 
 
-no_faces_detected_dir='\\'.join([dataset_dir, 'no faces detected'])
-if not os.path.isdir(no_faces_detected_dir):
-    os.mkdir(no_faces_detected_dir)
+no_faces_detected_in_dataset_dir='\\'.join([dataset_dir, 'no faces detected in dataset'])
+if not os.path.isdir(no_faces_detected_in_dataset_dir):
+    os.mkdir(no_faces_detected_in_dataset_dir)
 for image_path in no_faces_detected:
     no_face_image=Image_in_set(image_path)
-    no_face_image.save('\\'.join([no_faces_detected_dir, no_face_image.file_name]))
+    no_face_image.save('\\'.join([no_faces_detected_in_dataset_dir, no_face_image.file_name]))
+
 
 os.chdir(root_dir)
 pickle.dump(train_paths,open("train_paths.pkl","wb"))

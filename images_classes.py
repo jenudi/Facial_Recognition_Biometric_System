@@ -3,6 +3,7 @@ import numpy as np
 from random import randint,uniform
 from facenet_pytorch import MTCNN, InceptionResnetV1
 from torch import from_numpy
+from pymongo import MongoClient
 #from face_recognition import face_locations
 
 
@@ -10,6 +11,8 @@ from torch import from_numpy
 class Image_in_set:
 
     mtcnn = MTCNN(post_process=False, image_size=160)
+    face_detection_threshold=0.9
+    face_recognition_threshold = 0.95
     face_recognition_model = InceptionResnetV1(pretrained='vggface2').eval()
     name_to_id_dict=dict()
     image_size=(160,160)
@@ -47,7 +50,8 @@ class Image_in_set:
     def get_face_image(self):
         boxes, probs = Image_in_set.mtcnn.detect(self.values, landmarks=False)
         if (not boxes is None) and (not isinstance(boxes, type(None))):
-            box=[int(b) for b in boxes[0]]
+            if probs[0]>= Image_in_set.face_detection_threshold:
+                box=[int(b) for b in boxes[0]]
             return Face_image(self.values[box[1]:box[3], box[0]:box[2]],self.name)
         else:
             return None
@@ -85,26 +89,35 @@ class Image_in_set:
 
 class Captured_frame(Image_in_set):
 
+    client = MongoClient('mongodb://localhost:27017/')
+    with client:
+        biometric_system_db = client["biometric_system"]
+        attendance_collection = biometric_system_db["attendance"]
+
+    number_of_employees=biometric_system_db.attendance_collection.find().sort({age:-1}).limit(1)
+
     def __init__(self,values):
         self.values=values
         self.name=None
         self.path=None
         self.face_image=None
         self.face_detected=False
+        self.face_recognized=False
         self.id_detected=None
-        self.identification_probability=None
+        self.recognition_probability=None
 
     def set_face_image(self):
         self.face_image=self.get_face_image()
         self.face_detected=True if (self.face_image is not None) and not (isinstance(self.face_image, type(None))) else False
 
-    def identify(self,normalize_method,train_paths):
+    def identify(self,normalize_method,train_paths,id_to_name_dict):
         if not self.face_detected:
             raise FrameException("face must be detected in order to identify")
         face_embedding = self.face_image.get_embedding(normalize_method, train_paths)
-        self.id_detected = randint(1, len(Image_in_set.id_to_name_dict.keys()))
         self.identification_probability = uniform(8.0, 1.0)
-
+        if self.identification_probability>Image_in_set.face_recognition_threshold:
+            self.face_recognized = True
+            self.id_detected = randint(1, len(id_to_name_dict.keys()))
 
 
 class Face_image(Image_in_set):
@@ -113,6 +126,7 @@ class Face_image(Image_in_set):
         self.values=values
         self.name=name
         self.path=None
+
 
 
 def get_images_mean(paths_list):
