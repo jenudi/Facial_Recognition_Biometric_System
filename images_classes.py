@@ -92,9 +92,9 @@ class Captured_frame(Image_in_set):
     client = MongoClient('mongodb://localhost:27017/')
     with client:
         biometric_system_db = client["biometric_system"]
-        attendance_collection = biometric_system_db["attendance"]
+        employees_collection = biometric_system_db["employees"]
 
-    number_of_employees=biometric_system_db.attendance_collection.find().sort({age:-1}).limit(1)
+    number_of_employees=employees_collection.count_documents({})
 
     def __init__(self,values):
         self.values=values
@@ -117,7 +117,7 @@ class Captured_frame(Image_in_set):
         self.identification_probability = uniform(8.0, 1.0)
         if self.identification_probability>Image_in_set.face_recognition_threshold:
             self.face_recognized = True
-            self.id_detected = randint(1, len(id_to_name_dict.keys()))
+            self.id_detected = randint(2, Captured_frame.number_of_employees)
 
 
 class Face_image(Image_in_set):
@@ -126,7 +126,6 @@ class Face_image(Image_in_set):
         self.values=values
         self.name=name
         self.path=None
-
 
 
 def get_images_mean(paths_list):

@@ -22,7 +22,7 @@ def register_entry(id_detected,date_and_time,attendance_collection):
     attendence_query=attendance_collection.find(SON({"employee id": id_detected,
     "date": SON({"year": int(date_and_time[0]), "month": int(date_and_time[1]), "day": int(date_and_time[2])})}))
 
-    if len(attendence_query)>0:
+    if len(list(attendence_query))>0:
         print(' '.join(["employee number", id_detected, "already registered entry at date", date_and_time[0], date_and_time[1], date_and_time[2]]))
     else:
         attendence_insert=SON({
@@ -45,9 +45,9 @@ def register_exit(id_detected,date_and_time,attendance_collection):
     "date": SON({"year": int(date_and_time[0]), "month": int(date_and_time[1]), "day": int(date_and_time[2])}),
     "exit":{"$ne": None}}))
 
-    if len(entry_query)==0:
+    if len(list(entry_query))==0:
         print(' '.join(["employee number", id_detected, "didn't register entry at date", date_and_time[0], date_and_time[1], date_and_time[2]]))
-    elif len(exit_query)>0:
+    elif len(list(exit_query))>0:
         print(' '.join(["employee number", id_detected, "already registered exit at date", date_and_time[0], date_and_time[1], date_and_time[2]]))
     else:
         date_query={"employee id": id_detected,
