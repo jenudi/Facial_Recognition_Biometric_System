@@ -69,12 +69,15 @@ if __name__ == "__main__":
     if not cap.isOpened():
         raise IOError("Cannot open webcam")
 
+    face_detected_number=0
     while True:
         ret, frame = cap.read()
         frame = Captured_frame(cv.resize(frame, None, fx=0.5, fy=0.5,interpolation=cv.INTER_AREA))
         frame.set_face_image()
         if frame.face_detected:
-            #frame.face_image.resize_image()
+            frame.face_image.resize_image()
+            face_detected_number+=1
+            frame.save("".join([captured_images_dir,"\\",str(face_detected_number),".jpg"]))
             frame.identify("normalize_by_train_values",train_paths)
             if frame.identification_probability>identification_threshold:
                 now = datetime.now().strftime('%Y %m %d %H %M %S').split(' ')
@@ -88,5 +91,4 @@ if __name__ == "__main__":
             break
 
     cap.release()
-    #cv.waitKey()
     cv.destroyAllWindows()
