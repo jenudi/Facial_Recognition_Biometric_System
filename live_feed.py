@@ -12,7 +12,7 @@ if __name__ == "__main__":
         os.mkdir(no_faces_detected_dir)
 
 
-    cap = cv.VideoCapture(0)
+    cap = cv.VideoCapture(0,cv.CAP_DSHOW)
     if not cap.isOpened():
         raise IOError("Cannot open webcam")
 
@@ -30,7 +30,7 @@ if __name__ == "__main__":
             face_detected_number+=1
             frame_image.face_image.save("".join([faces_detected_dir,"\\",str(face_detected_number),".jpg"]))
             frame_image.identify("normalize_by_train_values",train_paths,id_to_name_dict)
-            if frame.face_recognized:
+            if frame_image.face_recognized:
                 now = datetime.now().strftime('%Y %m %d %H %M %S').split(' ')
                 register_entry(frame_image.id_detected,now,attendance_collection)
         else:

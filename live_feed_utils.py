@@ -23,7 +23,7 @@ def register_entry(id_detected,date_and_time,attendance_collection):
     "date": SON({"year": int(date_and_time[0]), "month": int(date_and_time[1]), "day": int(date_and_time[2])})}))
 
     if len(list(attendence_query))>0:
-        print(' '.join(["employee number", id_detected, "already registered entry at date", date_and_time[0], date_and_time[1], date_and_time[2]]))
+        print(' '.join(["employee number", str(id_detected), "already registered entry at date", date_and_time[0], date_and_time[1], date_and_time[2]]))
     else:
         attendence_insert=SON({
             "_id": '-'.join([str(id_detected),str(date_and_time[0]),str(date_and_time[1]),str(date_and_time[2])]),
@@ -34,7 +34,7 @@ def register_entry(id_detected,date_and_time,attendance_collection):
             "total": None
         })
         attendance_collection.insert_one(attendence_insert)
-        print("database updated for id "+ set(id_detected))
+        print("database updated for id "+ str(id_detected))
 
 
 def register_exit(id_detected,date_and_time,attendance_collection):
