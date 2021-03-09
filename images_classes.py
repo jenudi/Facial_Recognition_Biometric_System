@@ -52,7 +52,7 @@ class Image_in_set:
         if (not boxes is None) and (not isinstance(boxes, type(None))):
             if probs[0]>= Image_in_set.face_detection_threshold:
                 box=[int(b) for b in boxes[0]]
-            return Face_image(self.values[box[1]:box[3], box[0]:box[2]],self.name)
+                return Face_image(self.values[box[1]:box[3], box[0]:box[2]],self.name)
         else:
             return None
 

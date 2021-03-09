@@ -9,7 +9,7 @@ import ast
 import numpy as np
 
 class DataArgs:
-    def __init__(self, csv_path='mini data/sets_csv_files/'):
+    def __init__(self, csv_path='sets_csv_files/'):
         self.csv_path = csv_path
         self.train = self.csv_path + 'train.csv'
         self.val = self.csv_path + 'validation.csv'
