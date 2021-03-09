@@ -3,6 +3,7 @@ import os
 import pickle
 from pymongo import MongoClient
 from images_classes import *
+from DB_utils import *
 from datetime import datetime
 from bson.son import SON
 
@@ -37,20 +38,27 @@ def register_entry(id_detected,date_and_time,attendance_collection):
         print("database updated for id "+ str(id_detected))
 
 
-def register_exit(id_detected,date_and_time,attendance_collection):
+def register_exit(id_detected,exit_date_and_time,attendance_collection,override=False):
     entry_query=attendance_collection.find(SON({"employee id": id_detected,
-    "date": SON({"year": int(date_and_time[0]), "month": int(date_and_time[1]), "day": int(date_and_time[2])}),
-    "entry":{"$ne": None}}))
-    exit_query=attendance_collection.find(SON({"employee id": id_detected,
-    "date": SON({"year": int(date_and_time[0]), "month": int(date_and_time[1]), "day": int(date_and_time[2])}),
-    "exit":{"$ne": None}}))
-
+    "date": SON({"year": int(exit_date_and_time[0]), "month": int(exit_date_and_time[1]), "day": int(exit_date_and_time[2])}),
+    "entry":{"$ne": None}}),{"entry":1,"_id":0})
     if len(list(entry_query))==0:
-        print(' '.join(["employee number", id_detected, "didn't register entry at date", date_and_time[0], date_and_time[1], date_and_time[2]]))
-    elif len(list(exit_query))>0:
-        print(' '.join(["employee number", id_detected, "already registered exit at date", date_and_time[0], date_and_time[1], date_and_time[2]]))
-    else:
-        date_query={"employee id": id_detected,
-                    "date": SON({"year": int(date_and_time[0]), "month": int(date_and_time[1]), "day": int(date_and_time[2])})}
-        update_exit={"$set":{"exit":SON({"hour": int(date_and_time[3]), "minute": int(date_and_time[4]), "second": int(date_and_time[5])})}}
-        attendance_collection.update_one(date_query,update_exit)
+        print(' '.join(["employee number", id_detected, "didn't register entry at date", exit_date_and_time[0], exit_date_and_time[1], exit_date_and_time[2]]))
+        return
+
+    if override:
+        exit_query=attendance_collection.find(SON({"employee id": id_detected,
+        "date": SON({"year": int(exit_date_and_time[0]), "month": int(exit_date_and_time[1]), "day": int(exit_date_and_time[2])}),
+        "exit":{"$ne": None}}))
+            if len(list(exit_query))>0:
+                print(' '.join(["employee number", id_detected, "already registered exit at date", exit_date_and_time[0], exit_date_and_time[1], exit_date_and_time[2]]))
+                return
+
+    date_query={"employee id": id_detected,
+                "date": SON({"year": int(exit_date_and_time[0]), "month": int(exit_date_and_time[1]), "day": int(exit_date_and_time[2])})}
+    update_exit={"$set":{"exit":SON({"hour": int(exit_date_and_time[3]), "minute": int(exit_date_and_time[4]), "second": int(exit_date_and_time[5])})}}
+    attendance_collection.update_one(date_query,update_exit)
+    hours, minutes, seconds = calculate_total([entry_query["entry"]["hour"],entry_query["entry"]["minute"],entry_query["entry"]["second"]],\
+                                                [exit_date_and_time[3],exit_date_and_time[4],exit_date_and_time[5]])
+    update_total = {"$set": {"total": SON({"hour": hours, "minute": minutes, "second": seconds})}}
+    attendance_collection.update_one(date_query, update_total)
