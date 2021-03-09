@@ -1,11 +1,9 @@
+from images_sets_directories import *
 import pandas as pd
 #from tensorflow.keras.models import load_model
-from images_sets_directories import *
 
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
-
+#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 #facenet_model = load_model('facenet_keras.h5',compile=False)
 
 

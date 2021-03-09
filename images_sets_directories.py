@@ -1,8 +1,8 @@
+from images_classes import *
+from augmentation import *
 import os
 import shutil
 import math
-from images_classes import *
-from augmentation import *
 import pickle
 
 
@@ -87,7 +87,7 @@ for dir in directories:
         if not os.path.isdir(new_train_dir):
             os.mkdir(new_train_dir)
         new_face_image = new_train_image.get_face_image()
-        #new_face_image.resize_image()
+        new_face_image.resize_image()
         new_path='\\'.join([train_dir, dir, new_train_image.file_name])
         old_path=new_train_image.path
         new_face_image.save(new_path)
@@ -106,7 +106,7 @@ for dir in directories:
         if not os.path.isdir(new_validation_dir):
             os.mkdir(new_validation_dir)
         new_face_image = new_validation_image.get_face_image()
-        #new_face_image.resize_image()
+        new_face_image.resize_image()
         new_path='\\'.join([validation_dir, dir, new_validation_image.file_name])
         old_path=new_validation_image.path
         new_face_image.save(new_path)
@@ -117,7 +117,7 @@ for dir in directories:
         if not os.path.isdir(new_test_dir):
             os.mkdir(new_test_dir)
         new_face_image = new_test_image.get_face_image()
-        #new_face_image.resize_image()
+        new_face_image.resize_image()
         new_path='\\'.join([test_dir, dir, new_test_image.file_name])
         old_path=new_test_image.path
         new_face_image.save(new_path)
@@ -139,7 +139,7 @@ for dir in train_directories:
         (abs(new_face_image.values.shape[0]-new_face_image.values.shape[1])>80):
             continue
         else:
-            #new_face_image.resize_image()
+            new_face_image.resize_image()
             new_face_image.save(new_augmentation_image.path)
             augmentation_paths.append(new_face_image.path)
 

@@ -1,9 +1,9 @@
-#from face_recognition import face_locations
-from facenet_pytorch import MTCNN, InceptionResnetV1
 import cv2 as cv
 import numpy as np
 from random import randint,uniform
-
+from facenet_pytorch import MTCNN, InceptionResnetV1
+from torch import from_numpy
+#from face_recognition import face_locations
 
 
 
@@ -75,8 +75,12 @@ class Image_in_set:
             norm_values = self.normalize_by_image_values()
         #four_dim_values = np.expand_dims(norm_values, axis=0)
         #embedding = model.predict(four_dim_values)[0]
-        embedding = Image_in_set.face_recognition_model(norm_values.unsqueeze(0))
-        return embedding.detach()
+        #tensor_norm_values=from_numpy(norm_values).unsqueeze(0)
+        norm_values_axis_swapped_0_2=np.swapaxes(norm_values,0,2)
+        norm_values_axis_swapped_1_2=np.swapaxes(norm_values_axis_swapped_0_2,1,2)
+        tensor_norm_values=from_numpy(norm_values_axis_swapped_1_2).unsqueeze(0)
+        embedding = Image_in_set.face_recognition_model(tensor_norm_values)
+        return embedding.detach()[0]
 
 
 class Captured_frame(Image_in_set):
@@ -126,6 +130,7 @@ def get_images_std(paths_list):
         train_image=Image_in_set(path[0])
         train_std.append(train_image.values)
     return np.std(train_std,axis=(0,1,2))
+
 
 
 class FrameException(Exception):

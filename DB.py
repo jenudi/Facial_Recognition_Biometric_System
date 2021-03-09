@@ -14,7 +14,7 @@ def make_image_doc(path, employee_id, embedding,recognized="not yet tested",accu
         "employee id": employee_id,
         "recognized": recognized,
         "accuracy": accuracy,
-        "embedding": list(map(float,embedding)),
+        "embedding": embedding,
         "uploaded": SON({"date": SON({"year":int(now[0]),"month":int(now[1]),"day":int(now[2])}),
                         "time":SON({"hour":int(now[3]),"minute":int(now[4]),"second":int(now[5])})})
     })
