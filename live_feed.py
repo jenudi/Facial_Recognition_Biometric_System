@@ -31,8 +31,11 @@ if __name__ == "__main__":
             frame_image.face_image.save("".join([faces_detected_dir,"\\",str(face_detected_number),".jpg"]))
             frame_image.identify("normalize_by_train_values",train_paths,id_to_name_dict)
             if frame_image.face_recognized:
+                print("".join(["face recognized as id=",str(frame_image.id_detected)]))
                 now = datetime.now().strftime('%Y %m %d %H %M %S').split(' ')
                 register_entry(frame_image.id_detected,now,attendance_collection)
+            else:
+                print("no face recognized")
         else:
             print("no face detected")
             no_face_detected_number+=1
