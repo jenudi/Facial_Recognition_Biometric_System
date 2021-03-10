@@ -112,7 +112,7 @@ class Captured_frame(Image_in_set):
 
     def identify(self,normalize_method,train_paths,id_to_name_dict):
         if not self.face_detected:
-            raise FrameException("face must be detected in order to identify")
+            raise FrameException("face must be detected in order to perform identification")
         face_embedding = self.face_image.get_embedding(normalize_method, train_paths)
         self.identification_probability = uniform(0.8,1.0)
         if self.identification_probability>Image_in_set.face_recognition_threshold:
