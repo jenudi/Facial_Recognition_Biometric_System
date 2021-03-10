@@ -54,13 +54,12 @@ def register_entry(id_detected,entry_date_and_time,attendance_collection,overrid
 
 
 def register_exit(id_detected,exit_date_and_time,attendance_collection,override=False):
-    entry_find=SON({"employee id": id_detected,
-    "date": SON({"year": int(exit_date_and_time[0]), "month": int(exit_date_and_time[1]), "day": int(exit_date_and_time[2])}),
-    "entry":{"$ne": None}}),{"entry":1,"_id":0}
-    entry_query=attendance_collection.find(entry_find)
-    entry_query_list=(entry_query)
+    entry_find=SON({"employee id": id_detected, "date": SON({"year": int(exit_date_and_time[0]), "month": int(exit_date_and_time[1]), "day": int(exit_date_and_time[2])}),
+                    "entry":{"$ne": None}}),SON({"entry":1,"_id":0})
+    entry_query=attendance_collection.find(entry_find[0],entry_find[1])
+    entry_query_list=list(entry_query)
     if len(entry_query_list)==0:
-        raise QueryError(' '.join(["employee number", str(id_detected), "didn't register entry at date", str(exit_date_and_time[0]), str(exit_date_and_time[1]), str(exit_date_and_time[2])]))
+        raise QueryError(' '.join(["employee id=", str(id_detected), "didn't register entry at date", str(exit_date_and_time[0]), str(exit_date_and_time[1]), str(exit_date_and_time[2])]))
 
     attendance_doc_with_no_none_exit_find=SON({"employee id": id_detected,
                                                  "date": SON({"year": int(exit_date_and_time[0]),
@@ -69,7 +68,7 @@ def register_exit(id_detected,exit_date_and_time,attendance_collection,override=
                                                  "exit": {"$ne": None}})
     attendance_doc_with_no_none_exit_query = attendance_collection.find(attendance_doc_with_no_none_exit_find)
     if override==False and len(list(attendance_doc_with_no_none_exit_query))>0:
-        raise QueryError(' '.join(["employee number", str(id_detected), "already registered exit at date", str(exit_date_and_time[0]), str(exit_date_and_time[1]), str(exit_date_and_time[2]), \
+        raise QueryError(' '.join(["employee id=", str(id_detected), "already registered exit at date", str(exit_date_and_time[0]), str(exit_date_and_time[1]), str(exit_date_and_time[2]), \
                         "must allow override in order to update exit"]))
 
     else:
