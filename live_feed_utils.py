@@ -19,46 +19,73 @@ id_to_name_dict={value:key for key,value in Image_in_set.name_to_id_dict.items()
 train_paths=pickle.load(open("train_paths.pkl","rb"))
 
 
-def register_entry(id_detected,date_and_time,attendance_collection):
-    attendence_query=attendance_collection.find(SON({"employee id": id_detected,
-    "date": SON({"year": int(date_and_time[0]), "month": int(date_and_time[1]), "day": int(date_and_time[2])})}))
+class QueryError(Exception):
+    pass
 
-    if len(list(attendence_query))>0:
-        print(' '.join(["employee number", str(id_detected), "already registered entry at date", date_and_time[0], date_and_time[1], date_and_time[2]]))
+
+def register_entry(id_detected,entry_date_and_time,attendance_collection,override=False):
+    attendence_find=SON({"employee id": id_detected,
+                                                       "date": SON({"year": int(entry_date_and_time[0]),
+                                                                    "month": int(entry_date_and_time[1]),
+                                                                    "day": int(entry_date_and_time[2])})})
+    attendence_query = attendance_collection.find(attendence_find)
+    if override==False and len(list(attendence_query))>0:
+        raise QueryError(' '.join(["employee number", str(id_detected), "already registered entry at date", str(entry_date_and_time[0]), str(entry_date_and_time[1]), str(entry_date_and_time[2])\
+                       + "\nmust allow override in order to update entry"]))
+
+    elif override and len(list(attendence_query))>0:
+        date_query={"employee id": id_detected,
+                    "date": SON({"year": int(entry_date_and_time[0]), "month": int(entry_date_and_time[1]), "day": int(entry_date_and_time[2])})}
+        update_entry={"$set":{"entry":SON({"hour": int(entry_date_and_time[3]), "minute": int(entry_date_and_time[4]), "second": int(entry_date_and_time[5])})}}
+        attendance_collection.update_one(date_query,update_entry)
+        print("".join(["database entry updated for employee id="+ str(id_detected)]))
+
     else:
         attendence_insert=SON({
-            "_id": '-'.join([str(id_detected),str(date_and_time[0]),str(date_and_time[1]),str(date_and_time[2])]),
+            "_id": '-'.join([str(id_detected),str(entry_date_and_time[0]),str(entry_date_and_time[1]),str(entry_date_and_time[2])]),
             "employee id": id_detected,
-            "date": SON({"year": int(date_and_time[0]), "month": int(date_and_time[1]), "day": int(date_and_time[2])}),
-            "entry": SON({"hour": int(date_and_time[3]), "minute": int(date_and_time[4]), "second": int(date_and_time[5])}),
+            "date": SON({"year": int(entry_date_and_time[0]), "month": int(entry_date_and_time[1]), "day": int(entry_date_and_time[2])}),
+            "entry": SON({"hour": int(entry_date_and_time[3]), "minute": int(entry_date_and_time[4]), "second": int(entry_date_and_time[5])}),
             "exit": None,
             "total": None
         })
         attendance_collection.insert_one(attendence_insert)
-        print("database updated for id "+ str(id_detected))
+        print("".join(["database entry registered for employee id="+ str(id_detected)]))
 
 
 def register_exit(id_detected,exit_date_and_time,attendance_collection,override=False):
-    entry_query=attendance_collection.find(SON({"employee id": id_detected,
+    entry_find=SON({"employee id": id_detected,
     "date": SON({"year": int(exit_date_and_time[0]), "month": int(exit_date_and_time[1]), "day": int(exit_date_and_time[2])}),
-    "entry":{"$ne": None}}),{"entry":1,"_id":0})
-    if len(list(entry_query))==0:
-        print(' '.join(["employee number", id_detected, "didn't register entry at date", exit_date_and_time[0], exit_date_and_time[1], exit_date_and_time[2]]))
-        return
+    "entry":{"$ne": None}}),{"entry":1,"_id":0}
+    entry_query=attendance_collection.find(entry_find)
+    entry_query_list=(entry_query)
+    if len(entry_query_list)==0:
+        raise QueryError(' '.join(["employee number", str(id_detected), "didn't register entry at date", str(exit_date_and_time[0]), str(exit_date_and_time[1]), str(exit_date_and_time[2])]))
 
-    if override:
-        exit_query=attendance_collection.find(SON({"employee id": id_detected,
-        "date": SON({"year": int(exit_date_and_time[0]), "month": int(exit_date_and_time[1]), "day": int(exit_date_and_time[2])}),
-        "exit":{"$ne": None}}))
-            if len(list(exit_query))>0:
-                print(' '.join(["employee number", id_detected, "already registered exit at date", exit_date_and_time[0], exit_date_and_time[1], exit_date_and_time[2]]))
-                return
+    attendance_doc_with_no_none_exit_find=SON({"employee id": id_detected,
+                                                 "date": SON({"year": int(exit_date_and_time[0]),
+                                                              "month": int(exit_date_and_time[1]),
+                                                              "day": int(exit_date_and_time[2])}),
+                                                 "exit": {"$ne": None}})
+    attendance_doc_with_no_none_exit_query = attendance_collection.find(attendance_doc_with_no_none_exit_find)
+    if override==False and len(list(attendance_doc_with_no_none_exit_query))>0:
+        raise QueryError(' '.join(["employee number", str(id_detected), "already registered exit at date", str(exit_date_and_time[0]), str(exit_date_and_time[1]), str(exit_date_and_time[2]), \
+                        "must allow override in order to update exit"]))
 
-    date_query={"employee id": id_detected,
-                "date": SON({"year": int(exit_date_and_time[0]), "month": int(exit_date_and_time[1]), "day": int(exit_date_and_time[2])})}
-    update_exit={"$set":{"exit":SON({"hour": int(exit_date_and_time[3]), "minute": int(exit_date_and_time[4]), "second": int(exit_date_and_time[5])})}}
-    attendance_collection.update_one(date_query,update_exit)
-    hours, minutes, seconds = calculate_total([entry_query["entry"]["hour"],entry_query["entry"]["minute"],entry_query["entry"]["second"]],\
-                                                [exit_date_and_time[3],exit_date_and_time[4],exit_date_and_time[5]])
-    update_total = {"$set": {"total": SON({"hour": hours, "minute": minutes, "second": seconds})}}
-    attendance_collection.update_one(date_query, update_total)
+    else:
+        date_query={"employee id": id_detected,
+                    "date": SON({"year": int(exit_date_and_time[0]), "month": int(exit_date_and_time[1]), "day": int(exit_date_and_time[2])})}
+        update_exit={"$set":{"exit":SON({"hour": int(exit_date_and_time[3]), "minute": int(exit_date_and_time[4]), "second": int(exit_date_and_time[5])})}}
+        attendance_collection.update_one(date_query,update_exit)
+        print("".join(["database exit updated for employee id=",str(id_detected)]))
+
+        update_entry_date_and_time=[entry_query_list[0]["entry"]["hour"],entry_query_list[0]["entry"]["minute"],entry_query_list[0]["entry"]["second"]]
+        update_exit_date_and_time=[int(exit_date_and_time[3]),int(exit_date_and_time[4]),int(exit_date_and_time[5])]
+        hours, minutes, seconds = calculate_total(update_entry_date_and_time,update_exit_date_and_time)
+
+        update_total = {"$set": {"total": SON({"hours": hours, "minutes": minutes, "seconds": seconds})}}
+        attendance_collection.update_one(date_query, update_total)
+        if len(list(attendance_doc_with_no_none_exit_query)) > 0:
+            print("".join(["database total updated for employee id=", str(id_detected)]))
+        else:
+            print("".join(["database total registered for employee id=",str(id_detected)]))

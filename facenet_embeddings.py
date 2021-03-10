@@ -48,5 +48,4 @@ train_df.to_csv(''.join([os.getcwd(),'\\train.csv']),index=False)
 validation_df.to_csv(''.join([os.getcwd(),'\\validation.csv']),index=False)
 test_df.to_csv(''.join([os.getcwd(),'\\test.csv']),index=False)
 
-#os.chdir(root_dir)
 os.chdir(dataset_dir)

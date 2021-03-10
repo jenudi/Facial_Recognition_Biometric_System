@@ -3,7 +3,6 @@ from random import randint
 from math import floor
 from bson.son import SON
 from pymongo import MongoClient
-from facenet_embeddings import db_df
 
 
 def get_random(list_of_values):
@@ -57,13 +56,14 @@ def make_attendance_doc(employee_id, year, month, day, entry_time=(8, 0, 0), exi
 
 def make_employee_doc(employee_id, employee_number, name, images_directory_path,
                       branch=get_random(['A', 'B', 'C', 'D']), admin=False):
-    SON({
-        "_id": employee_id,
-        "employee number": employee_id,
-        "name": name,
-        "images directory path": images_directory_path,
-        "branch": branch,
-        "admin": admin
-    })
+    return \
+        SON({
+            "_id": employee_id,
+            "employee number": employee_number,
+            "name": name,
+            "images directory path": images_directory_path,
+            "branch": branch,
+            "admin": admin
+        })
 
 

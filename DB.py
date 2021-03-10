@@ -1,4 +1,6 @@
 from DB_utils import *
+from facenet_embeddings import db_df
+
 
 if __name__ == "__main__":
 
