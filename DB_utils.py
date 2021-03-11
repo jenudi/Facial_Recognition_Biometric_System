@@ -31,7 +31,7 @@ class Biometric_system_db:
 
     def __init__(self,client,db,employees_collection,images_collection,attendance_collection):
         if not Biometric_system_db._instance is None:
-            raise Exception("Biometric_system_db must contain only one instance")
+            raise DbError("Biometric_system_db must contain only one instance")
         else:
             Biometric_system_db._instance=self
         self.client = client
@@ -90,3 +90,6 @@ with client:
     attendance_collection = biometric_system_db["attendance"]
 
     db=Biometric_system_db(client,biometric_system_db,employees_collection,images_collection,attendance_collection)
+
+class DbError(Exception):
+    pass
