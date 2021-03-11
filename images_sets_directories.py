@@ -66,6 +66,8 @@ for dir in directories:
     cur_test_set = list()
     cur_validation_set = list()
 
+    if len(images)<2:
+        continue
     if len(images)==2:
         cur_train_set.append(Image_in_set('\\'.join([dir_path, images[0]])))
         cur_test_set.append(Image_in_set('\\'.join([dir_path, images[1]])))
