@@ -25,7 +25,7 @@ class Live_feed:
             employee_id = entry["employee id"]
             self.employees_entry_today[employee_id - 1] = True
 
-    def id_to_name_dict(self):
+    def update_id_to_name_dict_by_db(self):
         employees_id_names_query=self.db.employees_collection.find({},{"_id":1,"name":1})
         self.id_to_name_dict=dict()
         for employee in employees_id_names_query:
@@ -89,7 +89,7 @@ class Live_feed:
         if override == False and len(list(attendance_doc_with_no_none_exit_query)) > 0:
             raise QueryError(' '.join(
                 ["employee id=", str(id_detected), "already registered exit at date", str(date),
-                 "must allow override in order to update exit"]))
+                 "\nmust allow override in order to update exit"]))
 
         else:
             date_query = {"employee id": id_detected,
