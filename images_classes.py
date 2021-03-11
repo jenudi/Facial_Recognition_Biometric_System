@@ -87,39 +87,6 @@ class Image_in_set:
         return embedding.detach()[0]
 
 
-class Captured_frame(Image_in_set):
-
-    client = MongoClient('mongodb://localhost:27017/')
-    with client:
-        biometric_system_db = client["biometric_system"]
-        employees_collection = biometric_system_db["employees"]
-
-    number_of_employees=employees_collection.count_documents({})
-
-    def __init__(self,values):
-        self.values=values
-        self.name=None
-        self.path=None
-        self.face_image=None
-        self.face_detected=False
-        self.face_recognized=False
-        self.id_detected=None
-        self.recognition_probability=None
-
-    def set_face_image(self):
-        self.face_image=self.get_face_image()
-        self.face_detected=True if (self.face_image is not None) and not (isinstance(self.face_image, type(None))) else False
-
-    def identify(self,normalize_method,train_paths,id_to_name_dict):
-        if not self.face_detected:
-            raise FrameException("face must be detected in order to perform identification")
-        face_embedding = self.face_image.get_embedding(normalize_method, train_paths)
-        self.identification_probability = uniform(0.8,1.0)
-        if self.identification_probability>Image_in_set.face_recognition_threshold:
-            self.face_recognized = True
-            self.id_detected = randint(2, Captured_frame.number_of_employees)
-
-
 class Face_image(Image_in_set):
 
     def __init__(self,values,name):
