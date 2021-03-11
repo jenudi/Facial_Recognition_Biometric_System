@@ -1,5 +1,6 @@
 from images_classes import *
 from DB_utils import *
+from DB import db
 import cv2 as cv
 import os
 import pickle
@@ -9,11 +10,12 @@ from bson.son import SON
 
 class Live_feed:
 
-    def __init__(self,db,time_zone):
+    def __init__(self,db):
         self.db=db
-        self.date=date.today().date()
-        employees_entry_today = [False] * db.get_number_of_employees()
-        id_to_name_dict = {value: key for key, value in Image_in_set.name_to_id_dict.items()}
+        self.date=datetime.now().date()
+        self.number_of_employees=db.get_number_of_employees()
+        self.employees_entry_today = [False] * self.number_of_employees
+        self.id_to_name_dict = {value: key for key, value in Image_in_set.name_to_id_dict.items()}
 
     def update_employee_entry_today_by_db(self):
         entry_today_query_find = SON(
@@ -35,7 +37,7 @@ class Live_feed:
     def register_entry(self, id_detected, date=None, time=datetime.now().time(), override=False):
         if date is None:
             date=self.date
-        attendence_find = SON({"employee id": id_detected,"date": SON({"year": date.year,"month": date.month,"day": date.minute})})
+        attendence_find = SON({"employee id": id_detected,"date": SON({"year": date.year,"month": date.month,"day": date.day})})
         attendence_query = self.db.attendance_collection.find(attendence_find)
         if override == False and len(list(attendence_query)) > 0:
             raise QueryError(' '.join(
@@ -137,7 +139,7 @@ class Captured_frame(Image_in_set):
         else:
             Captured_frame.number_of_face_not_detected += 1
 
-    def identify(self,normalize_method,train_paths,id_to_name_dict):
+    def identify(self,normalize_method,train_paths,number_of_employees):
         if not self.face_detected:
             raise FrameException("face must be detected in order to perform identification")
         face_embedding = self.face_image.get_embedding(normalize_method, train_paths)
@@ -145,7 +147,7 @@ class Captured_frame(Image_in_set):
         if self.identification_probability>Image_in_set.face_recognition_threshold:
             self.face_recognized = True
             Captured_frame.number_of_faces_recognized+=1
-            self.id_detected = randint(2, Captured_frame.number_of_employees)
+            self.id_detected = randint(2, number_of_employees)
         else:
             Captured_frame.number_of_faces_not_recognized+=1
 

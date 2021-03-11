@@ -27,21 +27,17 @@ def calculate_total(entry_time, exit_time):
 
 class Biometric_system_db:
 
-    _instance=None
 
     def __init__(self,client,db,employees_collection,images_collection,attendance_collection):
-        if not Biometric_system_db._instance is None:
-            raise DbError("Biometric_system_db must contain only one instance")
-        else:
-            Biometric_system_db._instance=self
         self.client = client
         self.db=db
         self.employees_collection=employees_collection
         self.images_collection=images_collection
         self.attendance_collection=attendance_collection
 
-    def make_image_doc(self, path, employee_id, embedding, recognized="not yet tested", accuracy="not yet tested"):
-        now = datetime.now().strftime('%Y %m %d %H %M %S').split(' ')
+
+    def make_image_doc(self, path, employee_id, embedding, recognized=False, accuracy=None):
+        now = datetime.now()
         return \
             SON({
                 "_id": path.split('\\')[-1],
@@ -49,9 +45,10 @@ class Biometric_system_db:
                 "recognized": recognized,
                 "accuracy": accuracy,
                 "embedding": embedding,
-                "uploaded": SON({"date": SON({"year": int(now[0]), "month": int(now[1]), "day": int(now[2])}),
-                                 "time": SON({"hour": int(now[3]), "minute": int(now[4]), "second": int(now[5])})})
+                "uploaded": SON({"date": SON({"year": now.year, "month": now.month, "day": now.day}),
+                                 "time": SON({"hour": now.hour, "minute": now.minute, "second": now.second})})
             })
+
 
     def make_attendance_doc(self, employee_id, year, month, day, entry_time=(8, 0, 0), exit_time=(17, 0, 0)):
         hours, minutes, seconds = calculate_total(entry_time, exit_time)
@@ -65,6 +62,7 @@ class Biometric_system_db:
                 "total": SON({"hours": hours, "minutes": minutes, "seconds": seconds})
             })
 
+
     def make_employee_doc(self, employee_id, employee_number, name, images_directory_path,
                           branch=get_random(['A', 'B', 'C', 'D']), admin=False):
         return \
@@ -77,19 +75,6 @@ class Biometric_system_db:
                 "admin": admin
             })
 
+
     def get_number_of_employees(self):
         return self.employees_collection.count_documents({})
-
-
-
-client = MongoClient('mongodb://localhost:27017/')
-with client:
-    biometric_system_db = client["biometric_system"]
-    employees_collection = biometric_system_db["employees"]
-    images_collection = biometric_system_db["images"]
-    attendance_collection = biometric_system_db["attendance"]
-
-    db=Biometric_system_db(client,biometric_system_db,employees_collection,images_collection,attendance_collection)
-
-class DbError(Exception):
-    pass

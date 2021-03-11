@@ -1,10 +1,21 @@
-from images_sets_directories import *
+from images_classes import *
+import pickle
 import pandas as pd
+import os
 #from tensorflow.keras.models import load_model
 
 
 #os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 #facenet_model = load_model('facenet_keras.h5',compile=False)
+
+train_paths=pickle.load(open("train_paths.pkl","rb"))
+augmentation_paths=pickle.load(open("augmentation_paths.pkl","rb"))
+validation_paths=pickle.load(open("validation_paths.pkl","rb"))
+test_paths=pickle.load(open("test_paths.pkl","rb"))
+
+dataset_dir=pickle.load(open("dataset_dir.pkl","rb"))
+root_dir=pickle.load(open("root_dir.pkl","rb"))
+
 
 
 #all the images in the train, validation and test sets go through normalization
@@ -48,4 +59,4 @@ train_df.to_csv(''.join([os.getcwd(),'\\train.csv']),index=False)
 validation_df.to_csv(''.join([os.getcwd(),'\\validation.csv']),index=False)
 test_df.to_csv(''.join([os.getcwd(),'\\test.csv']),index=False)
 
-os.chdir(dataset_dir)
+os.chdir(root_dir)

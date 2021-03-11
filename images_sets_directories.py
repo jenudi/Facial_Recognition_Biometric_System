@@ -9,7 +9,7 @@ import pickle
 #all the train set images are saved in a list which is a class variable. this list is used in order or extract the mean and std of the
 #train set images for normalization for the rest of the images
 root_dir=os.getcwd()
-dataset_dir = input("Please enter the dataset directory path")
+dataset_dir = input("please enter the dataset directory path")
 os.chdir(dataset_dir)
 
 directories = [dir for dir in os.listdir(dataset_dir) if not '.' in dir] #directories contain all the people that have images in the dataset
@@ -23,7 +23,7 @@ test_dir = '\\'.join([sets_dir, 'test'])
 if os.path.isdir(sets_dir):
     delete_sets=None
     while delete_sets not in ["y","n"]:
-        delete_sets=input("Delete all current sets directories? y/n")
+        delete_sets=input("delete all current sets directories? y/n")
         if delete_sets=="y":
             shutil.rmtree(sets_dir)
             os.mkdir(sets_dir)
@@ -153,4 +153,11 @@ for image_path in no_faces_detected:
 
 
 os.chdir(root_dir)
+
 pickle.dump(train_paths,open("train_paths.pkl","wb"))
+pickle.dump(augmentation_paths,open("augmentation_paths.pkl","wb"))
+pickle.dump(validation_paths,open("validation_paths.pkl","wb"))
+pickle.dump(test_paths,open("test_paths.pkl","wb"))
+
+pickle.dump(dataset_dir,open("dataset_dir.pkl","wb"))
+pickle.dump(root_dir,open("root_dir.pkl","wb"))

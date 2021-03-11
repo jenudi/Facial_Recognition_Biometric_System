@@ -1,8 +1,20 @@
 from DB_utils import *
-from facenet_embeddings import db_df
+
+
+client = MongoClient('mongodb://localhost:27017/')
+with client:
+    biometric_system_db = client["biometric_system"]
+    employees_collection = biometric_system_db["employees"]
+    images_collection = biometric_system_db["images"]
+    attendance_collection = biometric_system_db["attendance"]
+
+    db=Biometric_system_db(client,biometric_system_db,employees_collection,images_collection,attendance_collection)
 
 
 if __name__ == "__main__":
+
+    from facenet_embeddings import db_df
+
 
     employees=list()
     images=list()
@@ -25,6 +37,6 @@ if __name__ == "__main__":
         employees[employee_index]["admin"]=True
 
 
-        db.employees_collection.insert_many(employees)
-        db.images_collection.insert_many(images)
-        db.attendance_collection.insert_many(attendance)
+    db.employees_collection.insert_many(employees)
+    db.images_collection.insert_many(images)
+    db.attendance_collection.insert_many(attendance)

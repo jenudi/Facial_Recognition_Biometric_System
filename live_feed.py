@@ -4,6 +4,8 @@ from live_feed_utils import *
 if __name__ == "__main__":
 
     live_feed = Live_feed(db)
+    live_feed.update_employee_entry_today_by_db()
+    live_feed.update_id_to_name_dict_by_db()
 
     faces_detected_dir='\\'.join([os.getcwd(),'faces detected in live feed'])
     if not os.path.isdir(faces_detected_dir):
@@ -28,14 +30,15 @@ if __name__ == "__main__":
             print("face detected")
             frame_image.face_image.resize_image()
             frame_image.face_image.save("".join([faces_detected_dir,"\\",str(Captured_frame.number_of_faces_detected),".jpg"]))
-            frame_image.identify("normalize_by_train_values",train_paths,live_feed.id_to_name_dict)
+            frame_image.identify("normalize_by_train_values",train_paths,live_feed.number_of_employees)
             if frame_image.face_recognized:
-                if live_feed.employees_entry_today[frame_image.id_detected-1]:
-                    continue
-                print("".join(["face recognized as id=",str(frame_image.id_detected)]))
-                now = datetime.now().strftime('%Y %m %d %H %M %S').split(' ')
-                live_feed.register_entry(frame_image.id_detected)
-                live_feed.employee_entry_today[frame_image.id_detected-1]=True
+                print("".join(["face recognized as employee id=",str(frame_image.id_detected)]))
+                if not live_feed.employees_entry_today[frame_image.id_detected-1]:
+                    now = datetime.now().strftime('%Y %m %d %H %M %S').split(' ')
+                    live_feed.register_entry(frame_image.id_detected)
+                    live_feed.employees_entry_today[frame_image.id_detected-1]=True
+                else:
+                    print("".join(["employee id=", str(frame_image.id_detected)," already registered entry today"]))
             else:
                 print("no face recognized")
         else:

@@ -7,7 +7,6 @@ from pymongo import MongoClient
 #from face_recognition import face_locations
 
 
-
 class Image_in_set:
 
     mtcnn = MTCNN(post_process=False, image_size=160)
