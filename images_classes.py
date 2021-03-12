@@ -29,7 +29,7 @@ class Image_in_set:
         if name in cls.name_to_id_dict.keys():
             return cls.name_to_id_dict[name]
         else:
-            new_id=len(cls.name_to_id_dict.keys())+1
+            new_id=len(cls.name_to_id_dict.keys())
             cls.name_to_id_dict[name]=new_id
             return new_id
 
@@ -109,8 +109,3 @@ def get_images_std(paths_list):
         train_image=Image_in_set(path[0])
         train_std.append(train_image.values)
     return np.std(train_std,axis=(0,1,2))
-
-
-
-class FrameException(Exception):
-    pass

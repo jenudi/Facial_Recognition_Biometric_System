@@ -154,5 +154,10 @@ class Captured_frame(Image_in_set):
 
 train_paths=pickle.load(open("train_paths.pkl","rb"))
 
+
 class QueryError(Exception):
+    pass
+
+
+class FrameException(Exception):
     pass
