@@ -49,19 +49,26 @@ class Net(nn.Module):
     def __init__(self,input_size=512,hidden_size=1, output_size=10):
         super(Net, self).__init__()
 
+        self.norm = nn.BatchNorm1d(512)
+        self.norm2 = nn.BatchNorm1d(hidden_size)
         self.fc1 = nn.Linear(input_size, hidden_size)
         self.fc2 = nn.Linear(hidden_size,hidden_size)
-        self.fc3 = nn.Linear(hidden_size, output_size)
-        self.dropout = nn.Dropout(0.5)
-        self.dropout2 = nn.Dropout(0.6)
+        self.fc3 = nn.Linear(hidden_size,hidden_size)
+        self.fc4 = nn.Linear(hidden_size, output_size)
+        self.dropout = nn.Dropout(0.3)
+        self.dropout2 = nn.Dropout(0.4)
 
     def forward(self, input):
 
-        x = F.leaky_relu(self.fc1(input))
+        x = self.norm(input)
+        x = F.leaky_relu(self.fc1(x))
+        x = F.leaky_relu(self.fc2(x))
         x = self.dropout(x)
         x = F.leaky_relu(self.fc2(x))
+        x = self.dropout(x)
+        x = F.leaky_relu(self.fc3(x))
         x = self.dropout2(x)
-        x = self.fc3(x)
+        x = self.fc4(x)
         return x
 
 
@@ -128,7 +135,7 @@ class Ann:
                 print('File Not Found')
                 return
         else:
-            print('Starting Ranzcr.main()')
+            print('Start training')
         for epoch_ndx in range(self.args.epochs):
             print(f"epoch: {epoch_ndx}")
             if decay_learning:
@@ -149,7 +156,7 @@ class Ann:
         plt.show()
         if args.save_model:
             torch.save(self.model.state_dict(), f'{self.time}_model.pth')
-        print("Finished: Ranzcr.main()")
+        print("Finished")
         return self.y_pred, self.y_pred_proba
 
     def training(self, epoch_ndx, train_dl):
@@ -188,7 +195,7 @@ class Ann:
                torch.max(F.softmax(logits_g.detach(),dim=1),1)[1]
 
 
-args = DataArgs(batch_size= 20,epochs= 70,hidden=600,lr=0.002,l2=0.004,save_model=False,load_model=False)
+args = DataArgs(batch_size= 50,epochs= 60,hidden=350,lr=0.0003,l2=0.01,save_model=False,load_model=False)
 a = Ann(args)
 l,t = a.main()
 y_true = pd.read_csv(args.val)
