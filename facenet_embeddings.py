@@ -17,31 +17,33 @@ dataset_dir=pickle.load(open("dataset_dir.pkl","rb"))
 root_dir=pickle.load(open("root_dir.pkl","rb"))
 
 
-
 #all the images in the train, validation and test sets go through normalization
 #the normalization type is standardization that is done by substracting the train set mean and dividing by the train set STD
+train_mean=get_images_mean(train_paths)
+train_std=get_images_std(train_paths)
+
 train_df=pd.DataFrame(columns=['id', 'name', 'embedding', 'path'])
 for index,image_paths in enumerate(train_paths):
     cur_image = Image_in_set(image_paths[0])
-    cur_image_embedding=cur_image.get_embedding("normalize_by_train_values",train_paths)
+    cur_image_embedding=cur_image.get_embedding("normalize_by_train_values",train_mean,train_std)
     train_df.loc[index]=[cur_image.id, cur_image.name, cur_image_embedding.tolist(), image_paths[1]]
 
 augmentation_df=pd.DataFrame(columns=['id', 'name', 'embedding'])
 for index,image_path in enumerate(augmentation_paths):
     cur_image = Image_in_set(image_path)
-    cur_image_embedding=cur_image.get_embedding("normalize_by_train_values",train_paths)
+    cur_image_embedding=cur_image.get_embedding("normalize_by_train_values",train_mean,train_std)
     augmentation_df.loc[index]=[cur_image.id, cur_image.name, cur_image_embedding.tolist()]
 
 validation_df=pd.DataFrame(columns=['id', 'name', 'embedding', 'path'])
 for index,image_paths in enumerate(validation_paths):
     cur_image = Image_in_set(image_paths[0])
-    cur_image_embedding=cur_image.get_embedding("normalize_by_train_values",train_paths)
+    cur_image_embedding=cur_image.get_embedding("normalize_by_train_values",train_mean,train_std)
     validation_df.loc[index]=[cur_image.id, cur_image.name, cur_image_embedding.tolist(), image_paths[1]]
 
 test_df=pd.DataFrame(columns=['id', 'name', 'embedding', 'path'])
 for index,image_paths in enumerate(test_paths):
     cur_image = Image_in_set(image_paths[0])
-    cur_image_embedding=cur_image.get_embedding("normalize_by_train_values",train_paths)
+    cur_image_embedding=cur_image.get_embedding("normalize_by_train_values",train_mean,train_std)
     test_df.loc[index]=[cur_image.id, cur_image.name, cur_image_embedding.tolist(), image_paths[1]]
 
 all_data_df = pd.concat([train_df,validation_df,test_df],ignore_index=True)
