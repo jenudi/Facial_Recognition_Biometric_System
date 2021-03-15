@@ -55,9 +55,7 @@ class Image_in_set:
         else:
             return None
 
-    def normalize_by_train_values(self,train_paths_list):
-        train_mean = get_images_mean(train_paths_list)
-        train_std = get_images_std(train_paths_list)
+    def normalize_by_train_values(self,train_mean,train_std):
         return (self.values - train_mean) / train_std
 
     def normalize_by_image_values(self):
@@ -70,10 +68,10 @@ class Image_in_set:
     def resize_image(self):
         self.values = cv.resize(self.values, Image_in_set.image_size)
 
-    def get_embedding(self, normalization_method, train_paths_list=None):
+    def get_embedding(self, normalization_method, train_mean=None, train_std=None):
         if normalization_method == "normalize_by_train_values":
-            assert (not train_paths_list is None) or (not isinstance(train_paths_list, type(None))), "enter train paths list in order to use the normalize by train values method"
-            norm_values = self.normalize_by_train_values(train_paths_list).astype("float32")
+            assert (not train_mean is None) and (not train_std is None), "enter train paths list in order to use the normalize by train values method"
+            norm_values = self.normalize_by_train_values(train_mean,train_std).astype("float32")
         else:
             norm_values = self.normalize_by_image_values()
         #four_dim_values = np.expand_dims(norm_values, axis=0)
