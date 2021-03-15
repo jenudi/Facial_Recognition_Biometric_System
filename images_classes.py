@@ -7,7 +7,7 @@ from pymongo import MongoClient
 #from face_recognition import face_locations
 
 
-class Image_in_set:
+class ImageInSet:
 
     mtcnn = MTCNN(post_process=False, image_size=160)
     face_detection_threshold=0.9
@@ -22,7 +22,7 @@ class Image_in_set:
         self.dir=self.path.split('\\')[-2]
         self.file_name=self.path.split('\\')[-1]
         self.name=' '.join(self.dir.split('_'))
-        self.id=Image_in_set.name_to_id(self.name)
+        self.id=ImageInSet.name_to_id(self.name)
 
     @classmethod
     def name_to_id(cls,name):
@@ -46,12 +46,13 @@ class Image_in_set:
             return None
     '''
 
-    def get_face_image(self):
-        boxes, probs = Image_in_set.mtcnn.detect(self.values, landmarks=False)
+    def get_face_indexes(self):
+        boxes, probs = ImageInSet.mtcnn.detect(self.values, landmarks=False)
         if (not boxes is None) and (not isinstance(boxes, type(None))):
-            if probs[0]>= Image_in_set.face_detection_threshold:
+            if probs[0]>= ImageInSet.face_detection_threshold:
                 box=[int(b) for b in boxes[0]]
-                return Face_image(self.values[box[1]:box[3], box[0]:box[2]],self.name)
+                return box
+                #return FaceImage(self.values[box[1]:box[3], box[0]:box[2]],self.name)
         else:
             return None
 
@@ -66,7 +67,7 @@ class Image_in_set:
         cv.imwrite(self.path, self.values)
 
     def resize_image(self):
-        self.values = cv.resize(self.values, Image_in_set.image_size)
+        self.values = cv.resize(self.values, ImageInSet.image_size)
 
     def get_embedding(self, normalization_method, train_mean=None, train_std=None):
         if normalization_method == "normalize_by_train_values":
@@ -80,11 +81,11 @@ class Image_in_set:
         norm_values_axis_swapped_0_2=np.swapaxes(norm_values,0,2)
         norm_values_axis_swapped_1_2=np.swapaxes(norm_values_axis_swapped_0_2,1,2)
         tensor_norm_values=from_numpy(norm_values_axis_swapped_1_2).unsqueeze(0)
-        embedding = Image_in_set.face_recognition_model(tensor_norm_values)
+        embedding = ImageInSet.face_recognition_model(tensor_norm_values)
         return embedding.detach()[0]
 
 
-class Face_image(Image_in_set):
+class FaceImage(ImageInSet):
 
     def __init__(self,values,name):
         self.values=values
@@ -96,7 +97,7 @@ def get_images_mean(paths_list):
     assert len(paths_list), "paths list must not be empty"
     train_mean=list()
     for path in paths_list:
-        train_image=Image_in_set(path[0])
+        train_image=ImageInSet(path[0])
         train_mean.append(train_image.values)
     return np.mean(train_mean, axis=(0, 1, 2))
 
@@ -104,6 +105,6 @@ def get_images_std(paths_list):
     assert len(paths_list), "paths list must not be empty"
     train_std=list()
     for path in paths_list:
-        train_image=Image_in_set(path[0])
+        train_image=ImageInSet(path[0])
         train_std.append(train_image.values)
     return np.std(train_std,axis=(0,1,2))

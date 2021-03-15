@@ -15,7 +15,7 @@ class Live_feed:
         self.date=datetime.now().date()
         self.number_of_employees=db.get_number_of_employees()
         self.employees_entry_today = [False] * self.number_of_employees
-        self.id_to_name_dict = {value: key for key, value in Image_in_set.name_to_id_dict.items()}
+        self.id_to_name_dict = {value: key for key, value in ImageInSet.name_to_id_dict.items()}
 
     def update_employee_entry_today_by_db(self):
         entry_today_query_find = SON(
@@ -114,7 +114,7 @@ class Live_feed:
 
 
 
-class Captured_frame(Image_in_set):
+class Captured_frame(ImageInSet):
 
     number_of_faces_detected=0
     number_of_face_not_detected=0
@@ -144,7 +144,7 @@ class Captured_frame(Image_in_set):
             raise FrameException("face must be detected in order to perform identification")
         face_embedding = self.face_image.get_embedding(normalize_method, train_paths)
         self.identification_probability = uniform(0.8,1.0)
-        if self.identification_probability>Image_in_set.face_recognition_threshold:
+        if self.identification_probability>ImageInSet.face_recognition_threshold:
             self.face_recognized = True
             Captured_frame.number_of_faces_recognized+=1
             self.id_detected = randint(2, number_of_employees)

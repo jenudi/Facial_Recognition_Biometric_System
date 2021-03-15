@@ -24,25 +24,25 @@ train_std=get_images_std(train_paths)
 
 train_df=pd.DataFrame(columns=['id', 'name', 'embedding', 'path'])
 for index,image_paths in enumerate(train_paths):
-    cur_image = Image_in_set(image_paths[0])
+    cur_image = ImageInSet(image_paths[0])
     cur_image_embedding=cur_image.get_embedding("normalize_by_train_values",train_mean,train_std)
     train_df.loc[index]=[cur_image.id, cur_image.name, cur_image_embedding.tolist(), image_paths[1]]
 
 augmentation_df=pd.DataFrame(columns=['id', 'name', 'embedding'])
 for index,image_path in enumerate(augmentation_paths):
-    cur_image = Image_in_set(image_path)
+    cur_image = ImageInSet(image_path)
     cur_image_embedding=cur_image.get_embedding("normalize_by_train_values",train_mean,train_std)
     augmentation_df.loc[index]=[cur_image.id, cur_image.name, cur_image_embedding.tolist()]
 
 validation_df=pd.DataFrame(columns=['id', 'name', 'embedding', 'path'])
 for index,image_paths in enumerate(validation_paths):
-    cur_image = Image_in_set(image_paths[0])
+    cur_image = ImageInSet(image_paths[0])
     cur_image_embedding=cur_image.get_embedding("normalize_by_train_values",train_mean,train_std)
     validation_df.loc[index]=[cur_image.id, cur_image.name, cur_image_embedding.tolist(), image_paths[1]]
 
 test_df=pd.DataFrame(columns=['id', 'name', 'embedding', 'path'])
 for index,image_paths in enumerate(test_paths):
-    cur_image = Image_in_set(image_paths[0])
+    cur_image = ImageInSet(image_paths[0])
     cur_image_embedding=cur_image.get_embedding("normalize_by_train_values",train_mean,train_std)
     test_df.loc[index]=[cur_image.id, cur_image.name, cur_image_embedding.tolist(), image_paths[1]]
 
