@@ -1,7 +1,6 @@
 from images_classes import *
 import pandas as pd
 import os
-import ast
 import pickle
 from datetime import datetime
 from random import randint
