@@ -3,7 +3,7 @@ from live_feed_utils import *
 
 if __name__ == "__main__":
 
-    live_feed = Live_feed(db)
+    live_feed = LiveFeed(db)
     live_feed.update_employee_entry_today_by_db()
     live_feed.update_id_to_name_dict_by_db()
 
@@ -24,12 +24,12 @@ if __name__ == "__main__":
         ret, frame = cap.read()
         if (frame is  None) or (isinstance(frame, type(None))) :
             continue
-        frame_image = Captured_frame(cv.resize(frame, None, fx=0.5, fy=0.5,interpolation=cv.INTER_AREA))
+        frame_image = CapturedFrame(cv.resize(frame, None, fx=0.5, fy=0.5,interpolation=cv.INTER_AREA))
         frame_image.set_face_image()
         if frame_image.face_detected:
             print("face detected")
             frame_image.face_image.resize_image()
-            frame_image.face_image.save("".join([faces_detected_dir,"\\",str(Captured_frame.number_of_faces_detected),".jpg"]))
+            frame_image.face_image.save("".join([faces_detected_dir,"\\",str(CapturedFrame.number_of_faces_detected),".jpg"]))
             frame_image.identify("normalize_by_train_values",train_paths,live_feed.number_of_employees)
             if frame_image.face_recognized:
                 print("".join(["face recognized as employee id=",str(frame_image.id_detected)]))
@@ -43,7 +43,7 @@ if __name__ == "__main__":
                 print("no face recognized")
         else:
             print("no face detected")
-            frame_image.save("".join([no_faces_detected_dir,"\\",str(Captured_frame.number_of_face_not_detected),".jpg"]))
+            frame_image.save("".join([no_faces_detected_dir,"\\",str(CapturedFrame.number_of_face_not_detected),".jpg"]))
         c = cv.waitKey(1)
         if c == 27:
             break

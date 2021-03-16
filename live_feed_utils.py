@@ -8,7 +8,7 @@ from datetime import datetime,date
 from bson.son import SON
 
 
-class Live_feed:
+class LiveFeed:
 
     def __init__(self,db):
         self.db=db
@@ -114,7 +114,7 @@ class Live_feed:
 
 
 
-class Captured_frame(ImageInSet):
+class CapturedFrame(ImageInSet):
 
     number_of_faces_detected=0
     number_of_face_not_detected=0
@@ -135,9 +135,9 @@ class Captured_frame(ImageInSet):
         self.face_image=self.get_face_image()
         self.face_detected=True if (self.face_image is not None) and not (isinstance(self.face_image, type(None))) else False
         if self.face_detected:
-            Captured_frame.number_of_faces_detected+=1
+            CapturedFrame.number_of_faces_detected+=1
         else:
-            Captured_frame.number_of_face_not_detected += 1
+            CapturedFrame.number_of_face_not_detected += 1
 
     def identify(self,normalize_method,train_paths,number_of_employees):
         if not self.face_detected:
@@ -146,10 +146,10 @@ class Captured_frame(ImageInSet):
         self.identification_probability = uniform(0.8,1.0)
         if self.identification_probability>ImageInSet.face_recognition_threshold:
             self.face_recognized = True
-            Captured_frame.number_of_faces_recognized+=1
+            CapturedFrame.number_of_faces_recognized+=1
             self.id_detected = randint(2, number_of_employees)
         else:
-            Captured_frame.number_of_faces_not_recognized+=1
+            CapturedFrame.number_of_faces_not_recognized+=1
 
 
 train_paths=pickle.load(open("train_paths.pkl","rb"))

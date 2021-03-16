@@ -62,9 +62,11 @@ for dir in directories:
             train_df.loc[train_df.shape[0]] = [images_to_save_in_dfs[1][0].path,
                                                  images_to_save_in_dfs[1][0].id, images_to_save_in_dfs[1][1], True]
 
+
+
 pre_db_df=validation_df.append(train_df[train_df["to_aug"]==False].drop(["to_aug"],axis=1),ignore_index=True)
+db_df=pre_db_df.groupby(['class'],as_index=False).aggregate({'face_indexes':list,'path':list})
+db_df.to_csv(os.path.join(root_dir,'db.csv'),index=False)
 
 train_df.to_csv(os.path.join(root_dir,'train.csv'),index=False)
 validation_df.to_csv(os.path.join(root_dir,'validation.csv'),index=False)
-
-db_df=pre_db_df.groupby(['class'],as_index=False).aggregate({'face_indexes':list,'path':list})

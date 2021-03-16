@@ -1,9 +1,13 @@
-from main import *
+from images_classes import *
+import pandas as pd
+import os
+import ast
 from datetime import datetime
 from random import randint
 from math import floor
 from bson.son import SON
 from pymongo import MongoClient
+
 
 
 def get_random(list_of_values):
