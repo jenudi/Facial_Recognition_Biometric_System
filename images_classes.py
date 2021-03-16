@@ -10,7 +10,7 @@ from pymongo import MongoClient
 class ImageInSet:
 
     mtcnn = MTCNN(post_process=False, image_size=160)
-    face_detection_threshold=0.9
+    face_detection_threshold=0.75
     face_recognition_threshold = 0.95
     face_recognition_model = InceptionResnetV1(pretrained='vggface2').eval()
     name_to_id_dict=dict()
@@ -31,6 +31,7 @@ class ImageInSet:
         else:
             new_id=len(cls.name_to_id_dict.keys())
             cls.name_to_id_dict[name]=new_id
+            #print(name + "added to dict as id=" + str(new_id))
             return new_id
 
     '''

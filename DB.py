@@ -8,26 +8,26 @@ with client:
     images_collection = biometric_system_db["images"]
     attendance_collection = biometric_system_db["attendance"]
 
-    db=Biometric_system_db(client,biometric_system_db,employees_collection,images_collection,attendance_collection)
+    db=BiometricSystemDb(client,biometric_system_db,employees_collection,images_collection,attendance_collection)
 
 
 if __name__ == "__main__":
-
-    from facenet_embeddings import db_df
 
 
     employees=list()
     images=list()
     attendance=list()
 
-    for index,name in enumerate(db_df['name']):
+    for index in range(db_df.shape[0]):
 
-        employee_id=int(db_df.iloc[index]['id'])
+        #employee_id=int(db_df.iloc[index]['id'])
+        employee_id=db_df.iloc[index]['class']
+        name=ImageInSet.name_to_id_dict[employee_id]
 
         employees.append(db.make_employee_doc(employee_id,employee_id,name,'/'.join(db_df.iloc[index]['path'][0].split('\\')[:-1])))
 
-        for embedding,path in zip(db_df.iloc[index]['embedding'],db_df.iloc[index]['path']):
-            images.append(db.make_image_doc(path,employee_id,embedding))
+        for path,face_indexes in zip(db_df.iloc[index]['embedding'],db_df.iloc[index]['path']):
+            images.append(db.make_image_doc(path,employee_id,face_indexes))
 
         attendance.append(db.make_attendance_doc(employee_id,2021,1,1))
         attendance.append(db.make_attendance_doc(employee_id,2021,1,2,(8,randint(0,59),randint(0,59)),(17,randint(0,59),randint(0,59))))

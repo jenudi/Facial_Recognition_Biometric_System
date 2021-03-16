@@ -1,3 +1,4 @@
+from main import *
 from datetime import datetime
 from random import randint
 from math import floor
@@ -25,7 +26,7 @@ def calculate_total(entry_time, exit_time):
     return hours, minutes, seconds
 
 
-class Biometric_system_db:
+class BiometricSystemDb:
 
 
     def __init__(self,client,db,employees_collection,images_collection,attendance_collection):
@@ -36,7 +37,7 @@ class Biometric_system_db:
         self.attendance_collection=attendance_collection
 
 
-    def make_image_doc(self, path, employee_id, embedding, recognized=False, accuracy=None):
+    def make_image_doc(self, path, employee_id, face_indexes, recognized=False, accuracy=None):
         now = datetime.now()
         return \
             SON({
@@ -44,7 +45,7 @@ class Biometric_system_db:
                 "employee id": employee_id,
                 "recognized": recognized,
                 "accuracy": accuracy,
-                "embedding": embedding,
+                "face indexes": face_indexes,
                 "uploaded": SON({"date": SON({"year": now.year, "month": now.month, "day": now.day}),
                                  "time": SON({"hour": now.hour, "minute": now.minute, "second": now.second})})
             })
