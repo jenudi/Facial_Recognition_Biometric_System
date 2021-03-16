@@ -2,12 +2,16 @@ from images_classes import *
 import pandas as pd
 import os
 import ast
+import pickle
 from datetime import datetime
 from random import randint
 from math import floor
 from bson.son import SON
 from pymongo import MongoClient
 
+
+name_to_id_dict = pickle.load(open("name_to_id_dict.pkl", "rb"))
+id_to_name_dict = {value: key for key, value in name_to_id_dict.items()}
 
 
 def get_random(list_of_values):

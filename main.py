@@ -10,7 +10,7 @@ if __name__=="__main__":
 
     root_dir=os.getcwd()
     directory_name = None
-    dataset_dir = os.path.join(root_dir, input("please enter the dataset directory name")) \
+    dataset_dir = os.path.join(root_dir, input("please enter the dataset directory path")) \
         if directory_name is None else os.path.join(root_dir, directory_name)
     directories = [dir for dir in os.listdir(dataset_dir) if not '.' in dir]
     train_df = pd.DataFrame(columns=['path','class','face_indexes','to_aug'])
@@ -65,6 +65,8 @@ if __name__=="__main__":
                                                      images_to_save_in_dfs[1][0].id, images_to_save_in_dfs[1][1], True]
 
 
+
+    pickle.dump(ImageInSet.name_to_id_dict,open("name_to_id_dict.pkl","wb"))
 
     pre_db_df=validation_df.append(train_df[train_df["to_aug"]==False].drop(["to_aug"],axis=1),ignore_index=True)
     db_df=pre_db_df.groupby(['class'],as_index=False).aggregate({'face_indexes':list,'path':list})

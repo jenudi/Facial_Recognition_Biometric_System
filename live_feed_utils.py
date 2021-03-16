@@ -15,7 +15,7 @@ class LiveFeed:
         self.date=datetime.now().date()
         self.number_of_employees=db.get_number_of_employees()
         self.employees_entry_today = [False] * self.number_of_employees
-        self.id_to_name_dict = {value: key for key, value in ImageInSet.name_to_id_dict.items()}
+        self.id_to_name_dict = id_to_name_dict
 
     def update_employee_entry_today_by_db(self):
         entry_today_query_find = SON(
