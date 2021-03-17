@@ -7,16 +7,33 @@ from torch.nn import functional as F
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.metrics import f1_score
+from PIL import Image, ImageFile
+import albumentations as A
+from albumentations.pytorch import ToTensor
+import cv2 as cv
+
+IMAGE_SIZE = 450
+train_transforms = A.Compose([A.LongestMaxSize(max_size=int(IMAGE_SIZE * 1.1)),
+                            A.PadIfNeeded(min_height=int(IMAGE_SIZE * 1.1),min_width=int(IMAGE_SIZE * 1.1),border_mode=cv.BORDER_CONSTANT),
+                            A.RandomCrop(width=IMAGE_SIZE, height=IMAGE_SIZE),
+                            A.ColorJitter(brightness=0.6, contrast=0.6, saturation=0.6, hue=0.6, p=0.4),
+                            A.OneOf([A.ShiftScaleRotate(rotate_limit=20, p=0.5, border_mode=cv.BORDER_CONSTANT),A.IAAAffine(shear=15, p=0.5, mode="constant")],p=1.0),
+                            A.HorizontalFlip(p=0.5),
+                            A.Blur(p=0.1),
+                            A.CLAHE(p=0.1),
+                            A.Posterize(p=0.1),
+                            A.ToGray(p=0.1),
+                            A.ChannelShuffle(p=0.05),
+                            A.Normalize(mean=[0, 0, 0], std=[1, 1, 1], max_pixel_value=255),ToTensor()])
 
 
 class DataArgs:
-    def __init__(self, csv_path='csv/',batch_size = 50,epochs = 50,lr = 1e-3,l2=0.01,hidden=None,
+    def __init__(self, csv_path='csv/',batch_size = 50,epochs = 50,lr = 1e-3,l2=0.01,img_size=500,hidden=None,
                  save_model=None,load_model=None):
 
         self.csv_path = csv_path
         self.train = self.csv_path + 'train.csv'
         self.val = self.csv_path + 'validation.csv'
-        self.test = self.csv_path + 'test.csv'
         self.embedding = 'embedding'
         self.target = 'name'
         self.num_features= 512
@@ -28,18 +45,22 @@ class DataArgs:
         self.save_model = save_model
         self.load_model = load_model
         self.l2 = l2
+        self.img_size = img_size
 
 
 class TabularDataset(Dataset):
-    def __init__(self, values):  # train=False
+    def __init__(self, values,transform=None):  # train=False
         self.values = values
+        self.transform = transform
+        self.general_transform = transform.transforms[-2:]
 
-    def __getitem__(self, index): # 0: 'id', 1: 'name',2 'embedding'
-        x = ast.literal_eval(self.values[index][2])
-        x = torch.tensor(x)
-        y = torch.tensor(self.values[index, 0])
-        y = y.to(torch.float32)
-        return x, y
+    def __getitem__(self, index): # 0: 'path', 1: 'cls', 2: 'name', 3 'aug'
+
+        cls = torch.tensor(self.values[index][1])
+        img = Image.open(self.values[index][0])
+        augmentations = self.transform(image=img) if self.values[index][3] else self.general_transform(image=img)
+        img = augmentations["image"]
+        return img, cls
 
     def __len__(self):
         return len(self.values)
@@ -113,16 +134,14 @@ class Ann:
     def init_dls(self):
         temp_pd = pd.read_csv(self.args.train)
         self.input_features = len(ast.literal_eval(temp_pd.iloc[0,2]))
-        temp_pd['id'] = temp_pd['id'] - 1
         self.out_features = len(temp_pd['id'].value_counts())
-        train_dataset = TabularDataset(values=temp_pd.values)
+        train_dataset = TabularDataset(values=temp_pd.values,transform=train_transforms)
         self.train_dl = DataLoader(train_dataset,batch_size=args.batch_size,shuffle=True,
                                        num_workers=self.num_workers,pin_memory=self.use_cuda)
         sorted_dict = collections.OrderedDict(sorted(temp_pd['id'].value_counts().to_dict().items()))
         self.class_weights = torch.FloatTensor(1 - (np.array(list(sorted_dict.values())) / sum(sorted_dict.values())))
         temp_pd = pd.read_csv(self.args.val)
-        temp_pd['id'] = temp_pd['id'] - 1
-        val_dataset = TabularDataset(values=temp_pd.values)
+        val_dataset = TabularDataset(values=temp_pd.values,transform=train_transforms)
         self.val_dl = DataLoader(val_dataset,batch_size=args.batch_size,shuffle=False,
                                      num_workers=self.num_workers,pin_memory=self.use_cuda)
 
@@ -199,5 +218,4 @@ args = DataArgs(batch_size= 50,epochs= 60,hidden=350,lr=0.0003,l2=0.01,save_mode
 a = Ann(args)
 l,t = a.main()
 y_true = pd.read_csv(args.val)
-y_true['id'] = y_true['id'] - 1
 print(f1_score(y_true['id'], l, average='micro'))
