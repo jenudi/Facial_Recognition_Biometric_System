@@ -33,7 +33,6 @@ class LiveFeed:
         for employee in employees_id_names_query:
             self.id_to_name_dict[employee["_id"]]=employee["name"]
 
-
     def register_entry(self, id_detected, date=None, time=datetime.now().time(), override=False):
         if date is None:
             date=self.date
@@ -111,7 +110,6 @@ class LiveFeed:
                 print("".join(["database total updated for employee id=", str(id_detected)]))
             else:
                 print("".join(["database total registered for employee id=", str(id_detected)]))
-
 
 
 class CapturedFrame(ImageInSet):
