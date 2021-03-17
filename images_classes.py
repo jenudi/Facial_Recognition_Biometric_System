@@ -31,7 +31,6 @@ class ImageInSet:
         else:
             new_id=len(cls.name_to_id_dict.keys())
             cls.name_to_id_dict[name]=new_id
-            #print(name + "added to dict as id=" + str(new_id))
             return new_id
 
     '''
@@ -51,11 +50,13 @@ class ImageInSet:
         boxes, probs = ImageInSet.mtcnn.detect(self.values, landmarks=False)
         if (not boxes is None) and (not isinstance(boxes, type(None))):
             if probs[0]>= ImageInSet.face_detection_threshold:
-                box=[int(b) for b in boxes[0]]
-                return box
-                #return FaceImage(self.values[box[1]:box[3], box[0]:box[2]],self.name)
+                face_indexes=[int(b) for b in boxes[0]]
+                return face_indexes
         else:
             return None
+
+    def get_face_image(self,face,indexes):
+        return FaceImage(self.values[indexes[1]:indexes[3], indexes[0]:indexes[2]], self.name)
 
     def normalize_by_train_values(self,train_mean,train_std):
         return (self.values - train_mean) / train_std
