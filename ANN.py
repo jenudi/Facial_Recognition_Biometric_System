@@ -8,6 +8,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.metrics import f1_score
 from PIL import Image, ImageFile
+from images_classes import *
 import albumentations as A
 from albumentations.pytorch import ToTensor
 import cv2 as cv
@@ -54,13 +55,14 @@ class TabularDataset(Dataset):
         self.transform = transform
         self.general_transform = transform.transforms[-2:]
 
-    def __getitem__(self, index): # 0: 'path', 1: 'cls', 2: 'name', 3 'aug'
+    def __getitem__(self, index): # 0: 'path', 1: 'cls', 2: 'face_indexes', 3 'aug'
 
-        cls = torch.tensor(self.values[index][1])
-        img = Image.open(self.values[index][0])
-        augmentations = self.transform(image=img) if self.values[index][3] else self.general_transform(image=img)
-        img = augmentations["image"]
-        return img, cls
+        image_class = torch.tensor(self.values[index][1])
+        image = ImageInSet(self.values[index][0])
+        face_image=image.get_face_image(self.values[index][2]).values
+        augmentations = self.transform(image=face_image) if self.values[index][3] else self.general_transform(image=face_image)
+        augmanted_image = augmentations["image"]
+        return augmanted_image, image_class
 
     def __len__(self):
         return len(self.values)
