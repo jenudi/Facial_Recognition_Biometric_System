@@ -30,7 +30,7 @@ if __name__ == "__main__":
             print("face detected")
             frame_image.face_image.resize_image()
             frame_image.face_image.save("".join([faces_detected_dir,"\\",str(CapturedFrame.number_of_faces_detected),".jpg"]))
-            frame_image.identify("normalize_by_train_values",train_paths,live_feed.number_of_employees)
+            frame_image.identify(live_feed.number_of_employees)
             if frame_image.face_recognized:
                 print("".join(["face recognized as employee id=",str(frame_image.id_detected)]))
                 if not live_feed.employees_entry_today[frame_image.id_detected-1]:

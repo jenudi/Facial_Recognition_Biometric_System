@@ -139,10 +139,9 @@ class CapturedFrame(ImageInSet):
         else:
             CapturedFrame.number_of_face_not_detected += 1
 
-    def identify(self,normalize_method,train_paths,number_of_employees):
+    def identify(self,number_of_employees):
         if not self.face_detected:
             raise FrameException("face must be detected in order to perform identification")
-        face_embedding = self.face_image.get_embedding(normalize_method, train_paths)
         self.identification_probability = uniform(0.8,1.0)
         if self.identification_probability>ImageInSet.face_recognition_threshold:
             self.face_recognized = True
@@ -150,9 +149,6 @@ class CapturedFrame(ImageInSet):
             self.id_detected = randint(2, number_of_employees)
         else:
             CapturedFrame.number_of_faces_not_recognized+=1
-
-
-train_paths=pickle.load(open("train_paths.pkl","rb"))
 
 
 class QueryError(Exception):
