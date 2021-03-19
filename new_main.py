@@ -55,39 +55,40 @@ train_df = pd.DataFrame(columns=['path', 'class', 'face_indexes', 'aug'])
 validation_df = pd.DataFrame(columns=['path', 'class', 'face_indexes'])
 
 for index,value in enumerate(df['num_of_valid']):
+    print(index)
     if value == 1:
         validation_df = validation_df.append({'path': df['valid'][index][0], 'class': df['cls'][index],
-                                              'face_indexes': df['indexes'][index]}, ignore_index=True)
+                                              'face_indexes': df['indexes'][index][0]}, ignore_index=True)
         j = 0
         while j < 40:
             train_df = train_df.append({'path': df['valid'][index][0], 'class': df['cls'][index],
-                                    'face_indexes': df['indexes'][index],'aug':1}, ignore_index=True)
+                                    'face_indexes': df['indexes'][index][0],'aug':1}, ignore_index=True)
             j += 1
 
     if value == 2:
         validation_df = validation_df.append({'path': df['valid'][index][0], 'class': df['cls'][index],
-                                              'face_indexes': df['indexes'][index]}, ignore_index=True)
+                                              'face_indexes': df['indexes'][index][0]}, ignore_index=True)
         train_df = train_df.append({'path': df['valid'][index][1], 'class': df['cls'][index],
-                                    'face_indexes': df['indexes'][index], 'aug': 0}, ignore_index=True)
+                                    'face_indexes': df['indexes'][index][1], 'aug': 0}, ignore_index=True)
         j = 0
         while j < 39:
             train_df = train_df.append({'path': df['valid'][index][1], 'class': df['cls'][index],
-                                        'face_indexes': df['indexes'][index], 'aug': 1}, ignore_index=True)
+                                        'face_indexes': df['indexes'][index][1], 'aug': 1}, ignore_index=True)
             j += 1
 
     if value == 3:
         validation_df = validation_df.append({'path': df['valid'][index][0], 'class': df['cls'][index],
-                                              'face_indexes': df['indexes'][index]}, ignore_index=True)
+                                              'face_indexes': df['indexes'][index][0]}, ignore_index=True)
         train_df = train_df.append({'path': df['valid'][index][1], 'class': df['cls'][index],
-                                    'face_indexes': df['indexes'][index], 'aug': 0}, ignore_index=True)
+                                    'face_indexes': df['indexes'][index][1], 'aug': 0}, ignore_index=True)
         train_df = train_df.append({'path': df['valid'][index][2], 'class': df['cls'][index],
-                                    'face_indexes': df['indexes'][index], 'aug': 0}, ignore_index=True)
+                                    'face_indexes': df['indexes'][index][2], 'aug': 0}, ignore_index=True)
         j = 0
         while j < 19:
             train_df = train_df.append({'path': df['valid'][index][1], 'class': df['cls'][index],
-                                        'face_indexes': df['indexes'][index], 'aug': 1}, ignore_index=True)
+                                        'face_indexes': df['indexes'][index][1], 'aug': 1}, ignore_index=True)
             train_df = train_df.append({'path': df['valid'][index][2], 'class': df['cls'][index],
-                                        'face_indexes': df['indexes'][index], 'aug': 1}, ignore_index=True)
+                                        'face_indexes': df['indexes'][index][2], 'aug': 1}, ignore_index=True)
             j += 1
 
 #%%
