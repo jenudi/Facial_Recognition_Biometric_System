@@ -9,32 +9,19 @@ from matplotlib import pyplot as plt
 from sklearn.metrics import f1_score
 from PIL import Image, ImageFile
 from images_classes import *
-import albumentations as A
-from albumentations.pytorch import ToTensor
 import cv2 as cv
+from aug import *
 
-IMAGE_SIZE = 450
-train_transforms = A.Compose([A.LongestMaxSize(max_size=int(IMAGE_SIZE * 1.1)),
-                            A.PadIfNeeded(min_height=int(IMAGE_SIZE * 1.1),min_width=int(IMAGE_SIZE * 1.1),border_mode=cv.BORDER_CONSTANT),
-                            A.RandomCrop(width=IMAGE_SIZE, height=IMAGE_SIZE),
-                            A.ColorJitter(brightness=0.6, contrast=0.6, saturation=0.6, hue=0.6, p=0.4),
-                            A.OneOf([A.ShiftScaleRotate(rotate_limit=20, p=0.5, border_mode=cv.BORDER_CONSTANT),A.IAAAffine(shear=15, p=0.5, mode="constant")],p=1.0),
-                            A.HorizontalFlip(p=0.5),
-                            A.Blur(p=0.1),
-                            A.CLAHE(p=0.1),
-                            A.Posterize(p=0.1),
-                            A.ToGray(p=0.1),
-                            A.ChannelShuffle(p=0.05),
-                            A.Normalize(mean=[0, 0, 0], std=[1, 1, 1], max_pixel_value=255),ToTensor()])
 
+############# [136, -14, 241, 116] 142641
 
 class DataArgs:
     def __init__(self, csv_path='csv/',batch_size = 50,epochs = 50,lr = 1e-3,l2=0.01,img_size=500,hidden=None,
                  save_model=None,load_model=None):
 
         self.csv_path = csv_path
-        self.train = self.csv_path + 'train.csv'
-        self.val = self.csv_path + 'validation.csv'
+        self.train = 'train.csv'
+        self.val = 'validation.csv'
         self.embedding = 'embedding'
         self.target = 'name'
         self.num_features= 512
@@ -49,50 +36,37 @@ class DataArgs:
         self.img_size = img_size
 
 
-class TabularDataset(Dataset):
-    def __init__(self, values,transform=None):  # train=False
+class FRBSDataset(Dataset):
+    def __init__(self, values,train_set=True):  # train=False
         self.values = values
-        self.transform = transform
-        self.general_transform = transform.transforms[-2:]
+        self.train_set = train_set
 
     def __getitem__(self, index): # 0: 'path', 1: 'cls', 2: 'face_indexes', 3 'aug'
 
         image_class = torch.tensor(self.values[index][1])
-        image = ImageInSet(self.values[index][0])
-        face_image=image.get_face_image(self.values[index][2]).values
-        augmentations = self.transform(image=face_image) if self.values[index][3] else self.general_transform(image=face_image)
-        augmanted_image = augmentations["image"]
-        return augmanted_image, image_class
+        image = ImageInSet(a.train_dl.dataset.values[index][0])
+        image = image.values.crop(image.get_face_indexes())
+        #indices = Image.open(self.values[index][0]).get_face_indexes()
+        #image = ImageInSet(self.values[index][0])
+        #indices = image.get_face_indexes()
+        #image = ImageInSet(self.values[index][0])
+        #face_image=image.get_face_image(eval(self.values[index][2])).values
+        #indices = eval(self.values[index][2])
+        #image = cv.imread(self.values[index][0])
+        #face_image = image[indices[1]:indices[3],indices[0]:indices[2]]
+        #print(index)
+        if self.train_set and self.values[index][3]:
+            face_image = aug_img(image)
+        else:
+            face_image = aug_img2(image)
+        norm_image = cv.normalize(face_image, None, alpha=0, beta=1,norm_type=cv.NORM_MINMAX, dtype=cv.CV_32F)
+        resized_img = torch.tensor(norm_image)
+        resized_img = resized_img.permute(2, 0, 1)
+        return resized_img, image_class
 
     def __len__(self):
         return len(self.values)
 
-
-class Net(nn.Module):
-    def __init__(self,input_size=512,hidden_size=1, output_size=10):
-        super(Net, self).__init__()
-
-        self.norm = nn.BatchNorm1d(512)
-        self.norm2 = nn.BatchNorm1d(hidden_size)
-        self.fc1 = nn.Linear(input_size, hidden_size)
-        self.fc2 = nn.Linear(hidden_size,hidden_size)
-        self.fc3 = nn.Linear(hidden_size,hidden_size)
-        self.fc4 = nn.Linear(hidden_size, output_size)
-        self.dropout = nn.Dropout(0.3)
-        self.dropout2 = nn.Dropout(0.4)
-
-    def forward(self, input):
-
-        x = self.norm(input)
-        x = F.leaky_relu(self.fc1(x))
-        x = F.leaky_relu(self.fc2(x))
-        x = self.dropout(x)
-        x = F.leaky_relu(self.fc2(x))
-        x = self.dropout(x)
-        x = F.leaky_relu(self.fc3(x))
-        x = self.dropout2(x)
-        x = self.fc4(x)
-        return x
 
 
 class Ann:
@@ -104,10 +78,10 @@ class Ann:
         self.val_dl = None
         self.input_features = None
         self.out_features = None
-        self.class_weights = None
+        #self.class_weights = None
         self.num_workers = 0
         self.init_dls()
-        self.model = self.model()
+        self.model = InceptionResnetV1(classify=True,pretrained='vggface2', num_classes=self.out_features)
         self.optimizer = self.optimizer()
         self.training_loss = 0.0
         self.val_loss = 0.0
@@ -117,15 +91,17 @@ class Ann:
         self.y_pred = list()
         self.y_pred_proba = list()
 
-    def model(self):
-        model = Net(self.input_features,args.hidden,self.out_features)
-        if self.use_cuda:
-            print(f"Using CUDA; {torch.cuda.device_count()} devices.")
-            model = model.to(self.device)
-        return model
+
+    #def model(self):
+     #   model = Net(self.input_features,args.hidden,self.out_features)
+      #  if self.use_cuda:
+       #     print(f"Using CUDA; {torch.cuda.device_count()} devices.")
+        #    model = model.to(self.device)
+        #return model
 
     def optimizer(self):
-        return optim.SGD(self.model.parameters(), lr=self.args.lr, momentum=0.99,weight_decay=self.args.l2)
+        return optim.Adam(self.model.parameters(), lr=0.001)
+        #return optim.SGD(self.model.parameters(), lr=self.args.lr, momentum=0.99,weight_decay=self.args.l2)
 
     def lr_schedule(self,epoch):
       if (epoch + 1) % 8 == 0:
@@ -135,15 +111,15 @@ class Ann:
 
     def init_dls(self):
         temp_pd = pd.read_csv(self.args.train)
-        self.input_features = len(ast.literal_eval(temp_pd.iloc[0,2]))
-        self.out_features = len(temp_pd['id'].value_counts())
-        train_dataset = TabularDataset(values=temp_pd.values,transform=train_transforms)
+        #self.input_features = len(ast.literal_eval(temp_pd.iloc[0,2]))
+        self.out_features = len(temp_pd['class'].value_counts())
+        train_dataset = FRBSDataset(values=temp_pd.values,)
         self.train_dl = DataLoader(train_dataset,batch_size=args.batch_size,shuffle=True,
                                        num_workers=self.num_workers,pin_memory=self.use_cuda)
-        sorted_dict = collections.OrderedDict(sorted(temp_pd['id'].value_counts().to_dict().items()))
-        self.class_weights = torch.FloatTensor(1 - (np.array(list(sorted_dict.values())) / sum(sorted_dict.values())))
+        #sorted_dict = collections.OrderedDict(sorted(temp_pd['class'].value_counts().to_dict().items()))
+        #self.class_weights = torch.FloatTensor(1 - (np.array(list(sorted_dict.values())) / sum(sorted_dict.values())))
         temp_pd = pd.read_csv(self.args.val)
-        val_dataset = TabularDataset(values=temp_pd.values,transform=train_transforms)
+        val_dataset = FRBSDataset(values=temp_pd.values,train_set=False)
         self.val_dl = DataLoader(val_dataset,batch_size=args.batch_size,shuffle=False,
                                      num_workers=self.num_workers,pin_memory=self.use_cuda)
 
@@ -210,14 +186,15 @@ class Ann:
         cls = torch.reshape(cls, (-1,))
         cls = cls.type(torch.LongTensor)
         logits_g = self.model(input)
-        loss_func = nn.CrossEntropyLoss(reduction='none',weight=self.class_weights)#weight=self.class_weights
+        loss_func = nn.CrossEntropyLoss(reduction='none')#weight=self.class_weights
         loss_g = loss_func(logits_g, cls)
         return loss_g.mean(), torch.max(F.softmax(logits_g.detach(),dim=1),1)[0], \
                torch.max(F.softmax(logits_g.detach(),dim=1),1)[1]
 
-
-args = DataArgs(batch_size= 50,epochs= 60,hidden=350,lr=0.0003,l2=0.01,save_model=False,load_model=False)
+args = DataArgs(batch_size= 20,epochs= 20,hidden=350,lr=0.0003,l2=0.01,save_model=False,load_model=False)
 a = Ann(args)
+#%%
+
 l,t = a.main()
 y_true = pd.read_csv(args.val)
 print(f1_score(y_true['id'], l, average='micro'))
