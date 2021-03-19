@@ -5,6 +5,7 @@ from facenet_pytorch import MTCNN, InceptionResnetV1
 from torch import from_numpy
 from pymongo import MongoClient
 #from face_recognition import face_locations
+from PIL import Image, ImageFile
 
 
 class ImageInSet:
@@ -17,7 +18,8 @@ class ImageInSet:
     image_size=(160,160)
 
     def __init__(self,path):
-        self.values=cv.imread(path)
+        #self.values=cv.imread(path)
+        self.values = Image.open(path)
         self.path=path
         self.dir=self.path.split('\\')[-2]
         self.file_name=self.path.split('\\')[-1]
@@ -51,12 +53,12 @@ class ImageInSet:
         if (not boxes is None) and (not isinstance(boxes, type(None))):
             if probs[0]>= ImageInSet.face_detection_threshold:
                 face_indexes=[int(b) for b in boxes[0]]
-                return face_indexes
+                return boxes[0]
         else:
             return None
 
-    def get_face_image(self,face,indexes):
-        return FaceImage(self.values[indexes[1]:indexes[3], indexes[0]:indexes[2]], self.name)
+    def get_face_image(self,indexes):
+        return FaceImage(self.values[int(indexes[1]):int(indexes[3]), int(indexes[0]):int(indexes[2])], self.name)
 
     def normalize_by_train_values(self,train_mean,train_std):
         return (self.values - train_mean) / train_std
