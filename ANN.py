@@ -8,7 +8,9 @@ from sklearn.metrics import f1_score
 from images_classes import *
 from aug import *
 from tqdm import tqdm
-
+import torch
+import datetime
+from new_main import train_df,validation_df
 
 
 class FRBSDataset(Dataset):
@@ -33,8 +35,6 @@ class FRBSDataset(Dataset):
 
     def __len__(self):
         return len(self.values)
-
-
 
 class Ann:
     def __init__(self, batch_size = 100,epochs = 10,lr = 1e-3,l2=0.01,save_model=False,load_model=False):
@@ -156,10 +156,10 @@ class Ann:
         return loss_g.mean(), torch.max(F.softmax(logits_g.detach(),dim=1),1)[0], \
                torch.max(F.softmax(logits_g.detach(),dim=1),1)[1]
 
-a = Ann(batch_size=300,epochs= 8,lr=0.0005,l2=0.05,save_model=False,load_model=False)
-a = Ann(args)
-#%%
 
-l,t = a.main()
-y_true = pd.read_csv(args.val)
-print(f1_score(y_true['id'], l, average='micro'))
+a = Ann(batch_size=50,epochs= 8,lr=0.0005,l2=0.05,save_model=False,load_model=False)
+#%%
+y_pred, y_proba = a.main()
+
+#y_true = pd.read_csv(args.val)
+#print(f1_score(y_true['id'], l, average='micro'))

@@ -3,6 +3,7 @@ import pandas as pd
 import os
 from tqdm import tqdm
 
+
 root_dir=os.getcwd()
 directory_name = 'dataset'
 dataset_dir = os.path.join(root_dir, input("please enter the dataset directory path")) \
@@ -66,3 +67,9 @@ for index,value in enumerate(loop):
             train_df = train_df.append({'path': df['valid'][index][1], 'class': df['cls'][index],'face_indexes': df['indexes'][index][1], 'aug': 1}, ignore_index=True)
             train_df = train_df.append({'path': df['valid'][index][2], 'class': df['cls'][index],'face_indexes': df['indexes'][index][2], 'aug': 1}, ignore_index=True)
             j += 1
+
+
+train_df.to_pickle("train_df.pickle")
+validation_df.to_pickle("validation_df.pickle")
+
+#%%
