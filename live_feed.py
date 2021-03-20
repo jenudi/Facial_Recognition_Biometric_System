@@ -28,8 +28,7 @@ if __name__ == "__main__":
         frame_image.set_face_image()
         if frame_image.face_detected:
             print("face detected")
-            frame_image.face_image.resize_image()
-            frame_image.face_image.save("".join([faces_detected_dir,"\\",str(CapturedFrame.number_of_faces_detected),".jpg"]))
+            frame_image.face_image.save(os.path.join(faces_detected_dir,str(CapturedFrame.number_of_faces_detected)+".jpg"))
             frame_image.identify(live_feed.number_of_employees)
             if frame_image.face_recognized:
                 print("".join(["face recognized as employee id=",str(frame_image.id_detected)]))

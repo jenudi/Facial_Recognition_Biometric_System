@@ -1,4 +1,6 @@
 from images_classes import *
+from torch.nn import functional as F
+import torch
 from DB_utils import *
 from DB import db
 import cv2 as cv
@@ -112,6 +114,11 @@ class LiveFeed:
                 print("".join(["database total registered for employee id=", str(id_detected)]))
 
 
+
+    model = InceptionResnetV1(classify=True, pretrained='vggface2', num_classes=self.out_features)
+    model.load_state_dict(torch.load(self.args.load_model))
+
+
 class CapturedFrame(ImageInSet):
 
     number_of_faces_detected=0
@@ -130,21 +137,29 @@ class CapturedFrame(ImageInSet):
         self.recognition_probability=None
 
     def set_face_image(self):
-        self.face_image=self.get_face_image()
-        self.face_detected=True if (self.face_image is not None) and not (isinstance(self.face_image, type(None))) else False
+        indexes_box=self.get_face_indexes()
+        self.face_detected=True if (indexes_box is not None) and not (isinstance(indexes_box, type(None))) else False
         if self.face_detected:
+            self.face_image = self.get_face_image(indexes_box)
             CapturedFrame.number_of_faces_detected+=1
         else:
             CapturedFrame.number_of_face_not_detected += 1
 
+
     def identify(self,number_of_employees):
         if not self.face_detected:
             raise FrameException("face must be detected in order to perform identification")
-        self.identification_probability = uniform(0.8,1.0)
-        if self.identification_probability>ImageInSet.face_recognition_threshold:
+
+        with torch.no_grads:
+            model.eval()
+            output = model(image)
+        id = torch.max(F.softmax(output.detach(), dim=1), 1)[0]
+        probability = torch.max(F.softmax(output.detach(), dim=1), 1)[1]
+
+        if probability>ImageInSet.face_recognition_threshold:
             self.face_recognized = True
             CapturedFrame.number_of_faces_recognized+=1
-            self.id_detected = randint(2, number_of_employees)
+            self.id_detected = id
         else:
             CapturedFrame.number_of_faces_not_recognized+=1
 

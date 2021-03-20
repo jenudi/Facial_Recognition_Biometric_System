@@ -1,4 +1,5 @@
 import cv2 as cv
+from PIL import Image
 import numpy as np
 from random import randint,uniform
 from facenet_pytorch import MTCNN, InceptionResnetV1
@@ -58,8 +59,10 @@ class ImageInSet:
             return None
 
     def get_face_image(self,indexes_box):
-        indexes = [int(b) for index in indexes_box]
-        return FaceImage(self.values[int(indexes[1]):int(indexes[3]), int(indexes[0]):int(indexes[2])], self.name)
+        pil_image=Image.open(self.path)
+        pil_image.crop(indexes_box)
+        return FaceImage(pil_image)
+        #return FaceImage(self.values[int(indexes[1]):int(indexes[3]), int(indexes[0]):int(indexes[2])], self.name)
 
     def normalize_by_train_values(self,train_mean,train_std):
         return (self.values - train_mean) / train_std
@@ -90,12 +93,16 @@ class ImageInSet:
         return embedding.detach()[0]
 
 
-class FaceImage(ImageInSet):
+class FaceImage:
 
     def __init__(self,values,name):
         self.values=values
         self.name=name
         self.path=None
+
+    def save(self,path):
+        self.values.save(path)
+        self.path=path
 
 
 def get_images_mean(paths_list):
