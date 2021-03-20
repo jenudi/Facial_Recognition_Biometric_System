@@ -115,12 +115,12 @@ class LiveFeed:
 
 
 
-    model = InceptionResnetV1(classify=True, pretrained='vggface2', num_classes=self.out_features)
-    model.load_state_dict(torch.load(self.args.load_model))
 
 
 class CapturedFrame(ImageInSet):
 
+    model = InceptionResnetV1(classify=True, pretrained='vggface2', num_classes=len(id_to_name_dict.keys()))
+    model.load_state_dict(torch.load(load_model))
     number_of_faces_detected=0
     number_of_face_not_detected=0
     number_of_faces_recognized=0
@@ -146,17 +146,17 @@ class CapturedFrame(ImageInSet):
             CapturedFrame.number_of_face_not_detected += 1
 
 
-    def identify(self,number_of_employees):
+    def identify(self):
         if not self.face_detected:
             raise FrameException("face must be detected in order to perform identification")
 
         with torch.no_grads:
-            model.eval()
-            output = model(image)
-        id = torch.max(F.softmax(output.detach(), dim=1), 1)[0]
-        probability = torch.max(F.softmax(output.detach(), dim=1), 1)[1]
+            CapturedFrame.model.eval()
+            output = CapturedFrame.model(self.face_image)
+        self.id_detected = torch.max(F.softmax(output.detach(), dim=1), 1)[0]
+        self.recognition_probability = torch.max(F.softmax(output.detach(), dim=1), 1)[1]
 
-        if probability>ImageInSet.face_recognition_threshold:
+        if self.recognition_probability>ImageInSet.face_recognition_threshold:
             self.face_recognized = True
             CapturedFrame.number_of_faces_recognized+=1
             self.id_detected = id
