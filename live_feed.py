@@ -20,8 +20,6 @@ if __name__ == "__main__":
     if not cap.isOpened():
         raise IOError("Cannot open webcam")
 
-
-
     while True:
         print("\n")
         start = time.time()
@@ -36,11 +34,11 @@ if __name__ == "__main__":
             frame_image.face_image.save(os.path.join(faces_detected_dir,str(CapturedFrame.number_of_faces_detected)+".jpg"))
             frame_image.identify("ann")
             end = time.time()
-            if frame_image.recognition_probability>live_feed.face_recognition_threshold:
+            if frame_image.recognition_probability>=live_feed.face_recognition_threshold:
                 live_feed.number_of_faces_recognized+=1
                 frame_image.set_name(live_feed.id_to_name_dict)
                 print("".join(["face recognized as ",frame_image.name, " in " + "{:.3f}".format(end-start) + " seconds"]))
-                if frame_image.recognition_probability>live_feed.save_image_in_db_threshold:
+                if frame_image.recognition_probability>=live_feed.save_image_in_db_threshold:
                     frame_image.save_image_to_db(live_feed.db)
                 if not live_feed.employees_entry_today[frame_image.id_detected]:
                     live_feed.register_entry(frame_image.id_detected,override=True)
