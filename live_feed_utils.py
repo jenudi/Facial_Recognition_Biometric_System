@@ -10,8 +10,9 @@ import pickle
 from datetime import datetime,date
 from bson.son import SON
 
-os.chdir("C:\\Users\\gash5\\Desktop")
-dict_cls2name=pickle.load(open("dict_cls2name.pickle","rb"))
+
+name_to_id_dict = pickle.load(open("name_to_id_dict.pkl", "rb"))
+
 
 class LiveFeed:
 
@@ -19,10 +20,8 @@ class LiveFeed:
         self.db=db
         self.date=datetime.now().date()
         #self.number_of_employees=db.get_number_of_employees()
-        self.number_of_employees=len(dict_cls2name.keys())
+        self.number_of_employees=len(name_to_id_dict.keys())
         self.employees_entry_today = [False] * self.number_of_employees
-        #self.id_to_name_dict = id_to_name_dict
-        self.id_to_name_dict=dict_cls2name
 
     def update_employee_entry_today_by_db(self):
         entry_today_query_find = SON(
@@ -132,6 +131,7 @@ class CapturedFrame(ImageInSet):
     number_of_face_not_detected=0
     number_of_faces_recognized=0
     number_of_faces_not_recognized=0
+    id_to_name_dict={value: key for key, value in name_to_id_dict.items()}
 
     def __init__(self,values):
         self.values=values
@@ -162,9 +162,11 @@ class CapturedFrame(ImageInSet):
             face_embedding=self.face_image.get_embedding(None)
             knn_id_prediction = CapturedFrame.KNN_model.predict(face_embedding)
             self.recognition_probability = CapturedFrame.KNN_model.predict_proba(face_embedding)[knn_id_prediction]
+            print("recognition probability: " + str(self.recognition_probability))
             if self.recognition_probability>CapturedFrame.face_recognition_threshold:
-                self.id_detected = knn_id_prediction
                 self.face_recognized = True
+                self.id_detected = knn_id_prediction
+                self.name=CapturedFrame.id_to_name_dict[self.id_detected]
 
         else:
             self.face_image.augmentate()
@@ -176,15 +178,13 @@ class CapturedFrame(ImageInSet):
                 CapturedFrame.model.eval()
                 output = CapturedFrame.model(unsqueezed_img)
             self.recognition_probability=torch.max(F.softmax(output,dim=1),1)[0].item()
-            #print(F.softmax(output.detach(), dim=1), 1)
-            #self.recognition_probability = float(torch.max(F.softmax(output.detach(), dim=1), 1)[0])
             print("recognition probability: " + str(self.recognition_probability))
 
             if self.recognition_probability>CapturedFrame.face_recognition_threshold:
                 self.face_recognized = True
-                CapturedFrame.number_of_faces_recognized+=1
                 self.id_detected = torch.max(F.softmax(output, dim=1), 1)[1].item()
-                #self.id_detected = int(torch.max(F.softmax(output.detach(), dim=1), 1)[1].item())
+                self.name=CapturedFrame.id_to_name_dict[self.id_detected]
+                CapturedFrame.number_of_faces_recognized+=1
             else:
                 CapturedFrame.number_of_faces_not_recognized+=1
 
