@@ -11,7 +11,8 @@ from datetime import datetime,date
 from bson.son import SON
 
 
-name_to_id_dict = pickle.load(open("name_to_id_dict.pkl", "rb"))
+#name_to_id_dict = pickle.load(open("name_to_id_dict.pkl", "rb"))
+id_to_name_dict_load = pickle.load(open("dict_cls2name.pickle", "rb"))
 
 
 class LiveFeed:
@@ -20,6 +21,7 @@ class LiveFeed:
         self.db=db
         self.date=datetime.now().date()
         #self.number_of_employees=db.get_number_of_employees()
+        self.id_to_name_dict = None
         self.number_of_employees=len(name_to_id_dict.keys())
         self.employees_entry_today = [False] * self.number_of_employees
 
@@ -125,13 +127,14 @@ class CapturedFrame(ImageInSet):
 
     ANN_model = InceptionResnetV1(classify=True, pretrained='vggface2', num_classes=5748)
     ANN_model.load_state_dict(torch.load("model.pth",map_location=torch.device("cpu")))
-    KNN_model=pickle.load(open("knn_mode.pkl","rb"))
-    face_recognition_threshold = 0.8
+    #KNN_model=pickle.load(open("knn_mode.pkl","rb"))
+    face_recognition_threshold = 0
     number_of_faces_detected=0
     number_of_face_not_detected=0
     number_of_faces_recognized=0
     number_of_faces_not_recognized=0
-    id_to_name_dict={value: key for key, value in name_to_id_dict.items()}
+    id_to_name_dict=id_to_name_dict_load
+    #id_to_name_dict={value: key for key, value in name_to_id_dict.items()}
 
     def __init__(self,values):
         self.values=values
@@ -147,6 +150,8 @@ class CapturedFrame(ImageInSet):
         indexes_box=self.get_face_indexes()
         self.face_detected=True if (indexes_box is not None) and not (isinstance(indexes_box, type(None))) else False
         if self.face_detected:
+            self.save("a.jpg")
+            self.path="a.jpg"
             self.face_image = self.get_face_image(indexes_box)
             #self.face_image=self.values[int(indexes_box[1]):int(indexes_box[3]), int(indexes_box[0]):int(indexes_box[2])]
             CapturedFrame.number_of_faces_detected+=1
@@ -158,6 +163,7 @@ class CapturedFrame(ImageInSet):
             raise FrameException("face must be detected in order to perform identification")
 
         if model=="knn":
+            '''
             self.face_image.augmentate()
             face_embedding=self.face_image.get_embedding(None)
             knn_id_prediction = CapturedFrame.KNN_model.predict(face_embedding)
@@ -167,6 +173,7 @@ class CapturedFrame(ImageInSet):
                 self.face_recognized = True
                 self.id_detected = knn_id_prediction
                 self.name=CapturedFrame.id_to_name_dict[self.id_detected]
+            '''
 
         else:
             self.face_image.augmentate()
@@ -175,8 +182,8 @@ class CapturedFrame(ImageInSet):
             resized_img = tensor_img.permute(2, 0, 1)
             unsqueezed_img=resized_img.unsqueeze(0)
             with torch.no_grad():
-                CapturedFrame.model.eval()
-                output = CapturedFrame.model(unsqueezed_img)
+                CapturedFrame.ANN_model.eval()
+                output = CapturedFrame.ANN_model(unsqueezed_img)
             self.recognition_probability=torch.max(F.softmax(output,dim=1),1)[0].item()
             print("recognition probability: " + str(self.recognition_probability))
 

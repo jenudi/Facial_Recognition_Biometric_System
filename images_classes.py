@@ -73,7 +73,8 @@ class ImageInSet:
             indexes_box=self.get_face_indexes()
         pil_image=Image.open(self.path)
         face_image=pil_image.crop(indexes_box)
-        return FaceImage(np.array(face_image))
+        return FaceImage(face_image)
+        #return FaceImage(np.array(face_image))
         #return FaceImage(self.values[int(indexes[1]):int(indexes[3]), int(indexes[0]):int(indexes[2])], self.name)
 
     def normalize_by_train_values(self,train_mean,train_std):
