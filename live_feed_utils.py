@@ -150,9 +150,9 @@ class CapturedFrame(ImageInSet):
         indexes_box=self.get_face_indexes()
         self.face_detected=True if (indexes_box is not None) and not (isinstance(indexes_box, type(None))) else False
         if self.face_detected:
-            self.save("face_image_temp.jpg")
+            #self.save("face_image_temp.jpg")
             self.face_image = self.get_face_image(indexes_box)
-            os.remove("face_image_temp.jpg")
+            #os.remove("face_image_temp.jpg")
             #self.face_image=self.values[int(indexes_box[1]):int(indexes_box[3]), int(indexes_box[0]):int(indexes_box[2])]
             CapturedFrame.number_of_faces_detected+=1
         else:

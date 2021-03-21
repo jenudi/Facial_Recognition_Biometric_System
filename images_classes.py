@@ -61,23 +61,24 @@ class ImageInSet:
 
     def get_face_indexes(self):
         boxes, probs = ImageInSet.mtcnn.detect(self.values, landmarks=False)
-        if (not boxes is None) and (not isinstance(boxes, type(None))):
-            if probs[0]>= ImageInSet.face_detection_threshold:
-                #face_indexes=[int(b) for b in boxes[0]]
-                return boxes[0]
+        if (not boxes is None) and (not isinstance(boxes, type(None))) and (probs[0]>= ImageInSet.face_detection_threshold) and (all(boxes[0]>0)):
+            face_indexes=[int(b) for b in boxes[0]]
+            return face_indexes
+            #return boxes[0]
         else:
             return None
 
-    def get_face_image(self,indexes_box=None,as_numpy=False):
-        if indexes_box is None:
+    def get_face_image(self,indexes=None,as_numpy=False):
+        if indexes is None:
             indexes_box=self.get_face_indexes()
-        pil_image=Image.open(self.path)
+        return FaceImage(self.values[indexes[1]:indexes[3], indexes[0]:indexes[2]])
+        ''''
         face_image=pil_image.crop(indexes_box)
         if as_numpy:
             return FaceImage(np.array(face_image))
         else:
             return FaceImage(face_image)
-        #return FaceImage(self.values[int(indexes[1]):int(indexes[3]), int(indexes[0]):int(indexes[2])], self.name)
+        '''
 
     def normalize_by_train_values(self,train_mean,train_std):
         return (self.values - train_mean) / train_std
