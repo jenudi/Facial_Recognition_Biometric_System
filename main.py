@@ -37,19 +37,19 @@ for index,dir in enumerate(directories):
     if len(images_to_save_in_dfs)==1:
         #validation_df.loc[validation_df.shape[0]]=[images_to_save_in_dfs[0][0].path,images_to_save_in_dfs[0][0].employee_id,images_to_save_in_dfs[0][1]]
         train_df.loc[train_df.shape[0]] = [images_to_save_in_dfs[0][0].path,
-                                             images_to_save_in_dfs[0][0].employee_id, images_to_save_in_dfs[0][1], 10]
+                                             images_to_save_in_dfs[0][0].employee_id, images_to_save_in_dfs[0][1], 20]
 
     if len(images_to_save_in_dfs)==2:
         train_df.loc[train_df.shape[0]] = [images_to_save_in_dfs[0][0].path,
-                                              images_to_save_in_dfs[0][0].employee_id, images_to_save_in_dfs[0][1], 10]
+                                              images_to_save_in_dfs[0][0].employee_id, images_to_save_in_dfs[0][1], 20]
         validation_df.loc[validation_df.shape[0]] = [images_to_save_in_dfs[1][0].path,images_to_save_in_dfs[1][0].employee_id
             ,images_to_save_in_dfs[1][1]]
 
     if len(images_to_save_in_dfs)==3:
         train_df.loc[train_df.shape[0]] = [images_to_save_in_dfs[0][0].path,
-                                              images_to_save_in_dfs[0][0].employee_id, images_to_save_in_dfs[0][1], 5]
+                                              images_to_save_in_dfs[0][0].employee_id, images_to_save_in_dfs[0][1], 10]
         train_df.loc[train_df.shape[0]] = [images_to_save_in_dfs[1][0].path,
-                                              images_to_save_in_dfs[1][0].employee_id, images_to_save_in_dfs[1][1], 5]
+                                              images_to_save_in_dfs[1][0].employee_id, images_to_save_in_dfs[1][1], 10]
         validation_df.loc[validation_df.shape[0]]=[images_to_save_in_dfs[2][0].path,images_to_save_in_dfs[2][0].employee_id,images_to_save_in_dfs[2][1]]
 
 pickle.dump(ImageInSet.name_to_id_dict,open("name_to_id_dict.pkl","wb"))

@@ -1,3 +1,4 @@
+from KNN_embeddings import *
 from sklearn.neighbors import KNeighborsClassifier
 import numpy as np
 import pickle
@@ -12,8 +13,8 @@ validation_ids=pickle.load(open("validation_ids.pkl", "rb"))
 class KnnModelArgs:
 
     def __init__(self):
-        self.n_neighbors=[5,10]
-        self.algorithms=["auto", "brute"]
+        self.n_neighbors=[3,5,7,10]
+        self.algorithms=["auto","ball_tree", "kd_tree", "brute"]
         self.weights=["uniform", "distance"]
         self.metrics=["euclidean","manhattan"]
 
@@ -36,6 +37,7 @@ for n_neighbors_number in knn_model_args.n_neighbors:
 
                 print("model number "+ str(model_number)+ " n_neighbors:"+ str(n_neighbors_number)+ " algorithm:"+algorithm+" weights:"+ weights_type+ " metric:"+metric +" score:" + str(knn_score))
 
+
 best_score=max(scores)
 best_model=np.argmax(scores)
 
@@ -48,3 +50,5 @@ train_embeddings.append(validation_embeddings)
 train_ids.append(validation_ids)
 
 knn_model.fit(train_embeddings, train_ids)
+
+pickle.dump(knn_model,open("knn_model.pkl","wb"))

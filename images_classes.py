@@ -68,13 +68,15 @@ class ImageInSet:
         else:
             return None
 
-    def get_face_image(self,indexes_box=None):
+    def get_face_image(self,indexes_box=None,as_numpy=False):
         if indexes_box is None:
             indexes_box=self.get_face_indexes()
         pil_image=Image.open(self.path)
         face_image=pil_image.crop(indexes_box)
-        return FaceImage(face_image)
-        #return FaceImage(np.array(face_image))
+        if as_numpy:
+            return FaceImage(np.array(face_image))
+        else:
+            return FaceImage(face_image)
         #return FaceImage(self.values[int(indexes[1]):int(indexes[3]), int(indexes[0]):int(indexes[2])], self.name)
 
     def normalize_by_train_values(self,train_mean,train_std):
@@ -90,7 +92,7 @@ class ImageInSet:
     def resize_image(self):
         self.values = cv.resize(self.values, ImageInSet.image_size)
 
-    def get_embedding(self, normalization_method, train_mean=None, train_std=None):
+    def get_embedding(self, normalization_method, train_mean=None, train_std=None ,as_numpy=False):
         if normalization_method == "normalize_by_train_values":
             assert (not train_mean is None) and (not train_std is None), "enter train paths list in order to use the normalize by train values method"
             norm_values = self.normalize_by_train_values(train_mean,train_std)
@@ -104,7 +106,10 @@ class ImageInSet:
         tensor_norm_values=torch.tensor(norm_values).float()
         resized_img=tensor_norm_values.permute(2, 0, 1)
         embedding = ImageInSet.face_recognition_model(resized_img.unsqueeze(0))
-        return embedding.detach()[0]
+        if as_numpy:
+            return np.array(embedding.detach()[0])
+        else:
+            return embedding.detach()[0]
 
 
 class FaceImage(ImageInSet):

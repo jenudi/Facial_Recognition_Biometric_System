@@ -22,7 +22,7 @@ class LiveFeed:
         self.date=datetime.now().date()
         #self.number_of_employees=db.get_number_of_employees()
         self.id_to_name_dict = None
-        self.number_of_employees=len(name_to_id_dict.keys())
+        self.number_of_employees=len(id_to_name_dict_load.keys())
         self.employees_entry_today = [False] * self.number_of_employees
 
     def update_employee_entry_today_by_db(self):
@@ -150,9 +150,9 @@ class CapturedFrame(ImageInSet):
         indexes_box=self.get_face_indexes()
         self.face_detected=True if (indexes_box is not None) and not (isinstance(indexes_box, type(None))) else False
         if self.face_detected:
-            self.save("a.jpg")
-            self.path="a.jpg"
+            self.save("face_image_temp.jpg")
             self.face_image = self.get_face_image(indexes_box)
+            os.remove("face_image_temp.jpg")
             #self.face_image=self.values[int(indexes_box[1]):int(indexes_box[3]), int(indexes_box[0]):int(indexes_box[2])]
             CapturedFrame.number_of_faces_detected+=1
         else:
