@@ -6,11 +6,14 @@ from datetime import datetime
 from random import randint
 from math import floor
 from bson.son import SON
-from pymongo import MongoClient
+from pymongo import MongoClient,errors
 
 
 #name_to_id_dict = pickle.load(open("name_to_id_dict.pkl", "rb"))
 #id_to_name_dict = {value: key for key, value in name_to_id_dict.items()}
+
+id_to_name_dict = pickle.load(open("dict_cls2name.pickle", "rb"))
+
 
 
 def get_random(list_of_values):

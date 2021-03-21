@@ -20,8 +20,11 @@ if __name__ == "__main__":
     if not cap.isOpened():
         raise IOError("Cannot open webcam")
 
+
+
     while True:
         print("\n")
+        start = time.time()
         ret, frame = cap.read()
         if (frame is  None) or (isinstance(frame, type(None))) :
             print("frame is none")
@@ -31,16 +34,21 @@ if __name__ == "__main__":
         if frame_image.face_detected:
             print("face detected")
             frame_image.face_image.save(os.path.join(faces_detected_dir,str(CapturedFrame.number_of_faces_detected)+".jpg"))
-            frame_image.identify("ANN")
-            if frame_image.face_recognized:
-                print("".join(["face recognized as employee id=",str(frame_image.id_detected)," name=",frame_image.name]))
+            frame_image.identify("ann")
+            end = time.time()
+            if frame_image.recognition_probability>live_feed.face_recognition_threshold:
+                live_feed.number_of_faces_recognized+=1
+                frame_image.set_name(live_feed.id_to_name_dict)
+                print("".join(["face recognized as ",frame_image.name, " in " + "{:.3f}".format(end-start) + " seconds"]))
+                if frame_image.recognition_probability>live_feed.save_image_in_db_threshold:
+                    frame_image.save_image_to_db(live_feed.db)
                 if not live_feed.employees_entry_today[frame_image.id_detected]:
-                    now = datetime.now().strftime('%Y %m %d %H %M %S').split(' ')
                     live_feed.register_entry(frame_image.id_detected,override=True)
                     live_feed.employees_entry_today[frame_image.id_detected]=True
                 else:
                     print("".join(["employee id=", str(frame_image.id_detected)," already registered entry today"]))
             else:
+                live_feed.number_of_faces_not_recognized_recognized+=1
                 print("no face recognized")
         else:
             print("no face detected")

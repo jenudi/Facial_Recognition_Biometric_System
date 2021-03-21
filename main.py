@@ -56,9 +56,9 @@ pickle.dump(ImageInSet.name_to_id_dict,open("name_to_id_dict.pkl","wb"))
 
 pre_db_df=validation_df.append(train_df.drop(["number_to_augmante"],axis=1),ignore_index=True)
 db_df=pre_db_df.groupby(['employee_id'],as_index=False).aggregate({'face_indexes':list,'path':list})
-db_df.to_pickle(os.path.join(root_dir,'db.pkl'))
+db_df.to_pickle("db_df.pkl")
 
-train_df.to_pickle(os.path.join(root_dir,'train.pkl'))
-validation_df.to_pickle(os.path.join(root_dir,'validation.pkl'))
+train_df.to_pickle("train_df.pkl")
+validation_df.to_pickle("validation_df.pkl")
 
 pickle.dump(ImageInSet.name_to_id_dict,open("name_to_id_dict.pkl","wb"))

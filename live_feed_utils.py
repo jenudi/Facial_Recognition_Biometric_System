@@ -9,19 +9,28 @@ import os
 import pickle
 from datetime import datetime,date
 from bson.son import SON
+import time
 
 
 #name_to_id_dict = pickle.load(open("name_to_id_dict.pkl", "rb"))
+#id_to_name_dict_load = {value: key for key, value in name_to_id_dict.items()}
+
 id_to_name_dict_load = pickle.load(open("dict_cls2name.pickle", "rb"))
 
 
 class LiveFeed:
 
+    face_recognition_threshold = 0
+    save_image_in_db_threshold=0
+    number_of_faces_recognized=0
+    number_of_faces_not_recognized=0
+
+
     def __init__(self,db):
         self.db=db
         self.date=datetime.now().date()
+        self.id_to_name_dict = id_to_name_dict_load
         #self.number_of_employees=db.get_number_of_employees()
-        self.id_to_name_dict = None
         self.number_of_employees=len(id_to_name_dict_load.keys())
         self.employees_entry_today = [False] * self.number_of_employees
 
@@ -120,62 +129,41 @@ class LiveFeed:
                 print("".join(["database total registered for employee id=", str(id_detected)]))
 
 
-os.chdir("C:\\Users\\gash5\\Desktop")
-
 
 class CapturedFrame(ImageInSet):
 
-    ANN_model = InceptionResnetV1(classify=True, pretrained='vggface2', num_classes=5748)
-    ANN_model.load_state_dict(torch.load("model.pth",map_location=torch.device("cpu")))
-    #KNN_model=pickle.load(open("knn_mode.pkl","rb"))
-    face_recognition_threshold = 0
+    ANN_model = InceptionResnetV1(classify=True, pretrained='vggface2', num_classes=len(id_to_name_dict_load.keys()))
+    ANN_model.load_state_dict(torch.load("ann_model.pth",map_location=torch.device("cpu")))
+    KNN_model=pickle.load(open("knn_model.pkl","rb"))
     number_of_faces_detected=0
     number_of_face_not_detected=0
-    number_of_faces_recognized=0
-    number_of_faces_not_recognized=0
-    id_to_name_dict=id_to_name_dict_load
-    #id_to_name_dict={value: key for key, value in name_to_id_dict.items()}
 
     def __init__(self,values):
         self.values=values
         self.name=""
         self.path=None
+        self.face_indexes=None
         self.face_image=None
         self.face_detected=False
-        self.face_recognized=False
         self.id_detected=None
         self.recognition_probability=None
 
     def set_face_image(self):
-        indexes_box=self.get_face_indexes()
-        self.face_detected=True if (indexes_box is not None) and not (isinstance(indexes_box, type(None))) else False
+        self.face_indexes=self.get_face_indexes()
+        self.face_detected=True if (self.face_indexes is not None) and not (isinstance(self.face_indexes, type(None))) else False
         if self.face_detected:
             #self.save("face_image_temp.jpg")
-            self.face_image = self.get_face_image(indexes_box)
+            self.face_image = self.get_face_image(self.face_indexes)
             #os.remove("face_image_temp.jpg")
             #self.face_image=self.values[int(indexes_box[1]):int(indexes_box[3]), int(indexes_box[0]):int(indexes_box[2])]
             CapturedFrame.number_of_faces_detected+=1
         else:
             CapturedFrame.number_of_face_not_detected += 1
 
-    def identify(self,model="knn"):
+    def identify(self,model):
         if not self.face_detected:
             raise FrameException("face must be detected in order to perform identification")
-
-        if model=="knn":
-            '''
-            self.face_image.augmentate()
-            face_embedding=self.face_image.get_embedding(None)
-            knn_id_prediction = CapturedFrame.KNN_model.predict(face_embedding)
-            self.recognition_probability = CapturedFrame.KNN_model.predict_proba(face_embedding)[knn_id_prediction]
-            print("recognition probability: " + str(self.recognition_probability))
-            if self.recognition_probability>CapturedFrame.face_recognition_threshold:
-                self.face_recognized = True
-                self.id_detected = knn_id_prediction
-                self.name=CapturedFrame.id_to_name_dict[self.id_detected]
-            '''
-
-        else:
+        if model=="ann":
             self.face_image.augmentate()
             norm_image = cv.normalize(self.face_image.values, None, alpha=0, beta=1, norm_type=cv.NORM_MINMAX, dtype=cv.CV_32F)
             tensor_img = torch.tensor(norm_image)
@@ -184,16 +172,37 @@ class CapturedFrame(ImageInSet):
             with torch.no_grad():
                 CapturedFrame.ANN_model.eval()
                 output = CapturedFrame.ANN_model(unsqueezed_img)
-            self.recognition_probability=torch.max(F.softmax(output,dim=1),1)[0].item()
-            print("recognition probability: " + str(self.recognition_probability))
+            self.recognition_probability=float(torch.max(F.softmax(output,dim=1),1)[0].item())
+            self.id_detected = int(torch.max(F.softmax(output, dim=1), 1)[1].item())
+        elif model=="knn":
+            self.face_image.augmentate()
+            face_embedding=self.face_image.get_embedding(None,as_numpy=True)
+            self.id_detected = int(CapturedFrame.KNN_model.predict([face_embedding])[0])
+            self.recognition_probability = float(CapturedFrame.KNN_model.predict_proba([face_embedding])[0][self.id_detected])
+        print("recognition probability: " + str(self.recognition_probability))
 
-            if self.recognition_probability>CapturedFrame.face_recognition_threshold:
-                self.face_recognized = True
-                self.id_detected = torch.max(F.softmax(output, dim=1), 1)[1].item()
-                self.name=CapturedFrame.id_to_name_dict[self.id_detected]
-                CapturedFrame.number_of_faces_recognized+=1
-            else:
-                CapturedFrame.number_of_faces_not_recognized+=1
+    def set_name(self,id_to_name_dict):
+        if self.id_detected is None:
+            raise FrameException("id must be detected in order to set name")
+        self.name=id_to_name_dict[self.id_detected]
+
+    def save_image_to_db(self,db,number_of_employee_images=None):
+        if number_of_employee_images is None:
+            number_of_employee_images=db.images_collection.count_documents({"employee_id":self.id_detected})
+        if len(str(number_of_employee_images))<4:
+            number_of_employee_images_str="0"*(4-len(str(number_of_employee_images)))+str(number_of_employee_images)
+        else:
+            number_of_employee_images_str=str(number_of_employee_images)
+        employee_path=db.employees_collection.find({"_id":self.id_detected},{"_id":0,"images directory path":1})[0]["images directory path"]
+        self.save(employee_path+"\\"+self.name+"_"+number_of_employee_images_str+".jpg")
+        #delete the next line later
+        os.remove(self.path)
+        image_doc=db.make_image_doc(self.path,self.id_detected,self.face_indexes,True,self.recognition_probability)
+        try:
+            db.images_collection.insert_one(image_doc)
+            print("image saved to database of employee id=" + str(self.id_detected))
+        except errors.DuplicateKeyError:
+            self.save_image_to_db(db,number_of_employee_images+1)
 
 
 class QueryError(Exception):

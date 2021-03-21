@@ -16,7 +16,6 @@ class ImageInSet:
     mtcnn = MTCNN(post_process=False, image_size=160)
     face_detection_threshold=0.9
     face_recognition_model = InceptionResnetV1(pretrained='vggface2').eval()
-    #name_to_class_dict=dict()
     name_to_id_dict=dict()
     image_size=(160,160)
 
@@ -51,13 +50,11 @@ class ImageInSet:
             return None
     '''
 
-
     def augmentate(self,type="validation"):
         if type=="train":
             self.values=aug_img(self.values)
         else:
             self.values=aug_img2(self.values)
-
 
     def get_face_indexes(self):
         boxes, probs = ImageInSet.mtcnn.detect(self.values, landmarks=False)
@@ -68,16 +65,13 @@ class ImageInSet:
         else:
             return None
 
-    def get_face_image(self,indexes=None,as_numpy=False):
+    def get_face_image(self,indexes=None):
         if indexes is None:
-            indexes_box=self.get_face_indexes()
+            indexes=self.get_face_indexes()
         return FaceImage(self.values[indexes[1]:indexes[3], indexes[0]:indexes[2]])
         ''''
         face_image=pil_image.crop(indexes_box)
-        if as_numpy:
-            return FaceImage(np.array(face_image))
-        else:
-            return FaceImage(face_image)
+        return FaceImage(np.array(face_image))
         '''
 
     def normalize_by_train_values(self,train_mean,train_std):
@@ -120,10 +114,11 @@ class FaceImage(ImageInSet):
         self.name=None
         self.path=None
 
+    '''
     def save(self,path):
         self.values.save(path)
         self.path=path
-
+    '''
 
 def get_images_mean(paths_list):
     assert len(paths_list), "paths list must not be empty"

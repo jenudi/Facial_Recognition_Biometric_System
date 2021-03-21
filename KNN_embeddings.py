@@ -1,5 +1,4 @@
-from main import *
-#from images_classes import *
+from images_classes import *
 import pickle
 import os
 
