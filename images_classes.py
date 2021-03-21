@@ -8,7 +8,7 @@ from facenet_pytorch import MTCNN, InceptionResnetV1
 from torch import from_numpy
 from pymongo import MongoClient
 #from face_recognition import face_locations
-from PIL import Image, ImageFile
+#from PIL import Image, ImageFile
 
 
 class ImageInSet:
