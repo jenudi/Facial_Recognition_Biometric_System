@@ -1,4 +1,5 @@
 from images_classes import *
+from aug import aug_img2
 from torch.nn import functional as F
 import torch
 from DB_utils import *
@@ -9,15 +10,19 @@ import pickle
 from datetime import datetime,date
 from bson.son import SON
 
+os.chdir("C:\\Users\\gash5\\Desktop")
+dict_cls2name=pickle.load(open("dict_cls2name.pickle","rb"))
 
 class LiveFeed:
 
     def __init__(self,db):
         self.db=db
         self.date=datetime.now().date()
-        self.number_of_employees=db.get_number_of_employees()
+        #self.number_of_employees=db.get_number_of_employees()
+        self.number_of_employees=len(dict_cls2name.keys())
         self.employees_entry_today = [False] * self.number_of_employees
-        self.id_to_name_dict = id_to_name_dict
+        #self.id_to_name_dict = id_to_name_dict
+        self.id_to_name_dict=dict_cls2name
 
     def update_employee_entry_today_by_db(self):
         entry_today_query_find = SON(
@@ -114,13 +119,15 @@ class LiveFeed:
                 print("".join(["database total registered for employee id=", str(id_detected)]))
 
 
-
+os.chdir("C:\\Users\\gash5\\Desktop")
 
 
 class CapturedFrame(ImageInSet):
 
-    model = InceptionResnetV1(classify=True, pretrained='vggface2', num_classes=len(id_to_name_dict.keys()))
-    model.load_state_dict(torch.load(load_model))
+    ANN_model = InceptionResnetV1(classify=True, pretrained='vggface2', num_classes=5748)
+    ANN_model.load_state_dict(torch.load("model.pth",map_location=torch.device("cpu")))
+    KNN_model=pickle.load(open("knn_mode.pkl","rb"))
+    face_recognition_threshold = 0.8
     number_of_faces_detected=0
     number_of_face_not_detected=0
     number_of_faces_recognized=0
@@ -128,7 +135,7 @@ class CapturedFrame(ImageInSet):
 
     def __init__(self,values):
         self.values=values
-        self.name=None
+        self.name=""
         self.path=None
         self.face_image=None
         self.face_detected=False
@@ -141,27 +148,45 @@ class CapturedFrame(ImageInSet):
         self.face_detected=True if (indexes_box is not None) and not (isinstance(indexes_box, type(None))) else False
         if self.face_detected:
             self.face_image = self.get_face_image(indexes_box)
+            #self.face_image=self.values[int(indexes_box[1]):int(indexes_box[3]), int(indexes_box[0]):int(indexes_box[2])]
             CapturedFrame.number_of_faces_detected+=1
         else:
             CapturedFrame.number_of_face_not_detected += 1
 
-
-    def identify(self):
+    def identify(self,model="knn"):
         if not self.face_detected:
             raise FrameException("face must be detected in order to perform identification")
 
-        with torch.no_grads:
-            CapturedFrame.model.eval()
-            output = CapturedFrame.model(self.face_image)
-        self.id_detected = torch.max(F.softmax(output.detach(), dim=1), 1)[0]
-        self.recognition_probability = torch.max(F.softmax(output.detach(), dim=1), 1)[1]
+        if model=="knn":
+            self.face_image.augmentate()
+            face_embedding=self.face_image.get_embedding(None)
+            knn_id_prediction = CapturedFrame.KNN_model.predict(face_embedding)
+            self.recognition_probability = CapturedFrame.KNN_model.predict_proba(face_embedding)[knn_id_prediction]
+            if self.recognition_probability>CapturedFrame.face_recognition_threshold:
+                self.id_detected = knn_id_prediction
+                self.face_recognized = True
 
-        if self.recognition_probability>ImageInSet.face_recognition_threshold:
-            self.face_recognized = True
-            CapturedFrame.number_of_faces_recognized+=1
-            self.id_detected = id
         else:
-            CapturedFrame.number_of_faces_not_recognized+=1
+            self.face_image.augmentate()
+            norm_image = cv.normalize(self.face_image.values, None, alpha=0, beta=1, norm_type=cv.NORM_MINMAX, dtype=cv.CV_32F)
+            tensor_img = torch.tensor(norm_image)
+            resized_img = tensor_img.permute(2, 0, 1)
+            unsqueezed_img=resized_img.unsqueeze(0)
+            with torch.no_grad():
+                CapturedFrame.model.eval()
+                output = CapturedFrame.model(unsqueezed_img)
+            self.recognition_probability=torch.max(F.softmax(output,dim=1),1)[0].item()
+            #print(F.softmax(output.detach(), dim=1), 1)
+            #self.recognition_probability = float(torch.max(F.softmax(output.detach(), dim=1), 1)[0])
+            print("recognition probability: " + str(self.recognition_probability))
+
+            if self.recognition_probability>CapturedFrame.face_recognition_threshold:
+                self.face_recognized = True
+                CapturedFrame.number_of_faces_recognized+=1
+                self.id_detected = torch.max(F.softmax(output, dim=1), 1)[1].item()
+                #self.id_detected = int(torch.max(F.softmax(output.detach(), dim=1), 1)[1].item())
+            else:
+                CapturedFrame.number_of_faces_not_recognized+=1
 
 
 class QueryError(Exception):

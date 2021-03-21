@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     for index in range(db_df.shape[0]):
 
-        employee_id=int(db_df.iloc[index]['class'])
+        employee_id=int(db_df.iloc[index]['employee_id'])
         name=id_to_name_dict[employee_id]
 
         employees.append(db.make_employee_doc(employee_id,employee_id,name,'/'.join(db_df.iloc[index]['path'][0].split('\\')[:-1])))

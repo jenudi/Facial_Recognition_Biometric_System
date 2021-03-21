@@ -5,7 +5,7 @@ if __name__ == "__main__":
 
     live_feed = LiveFeed(db)
     live_feed.update_employee_entry_today_by_db()
-    live_feed.update_id_to_name_dict_by_db()
+    #live_feed.update_id_to_name_dict_by_db()
 
     faces_detected_dir='\\'.join([os.getcwd(),'faces detected in live feed'])
     if not os.path.isdir(faces_detected_dir):
@@ -21,8 +21,10 @@ if __name__ == "__main__":
         raise IOError("Cannot open webcam")
 
     while True:
+        print("\n")
         ret, frame = cap.read()
         if (frame is  None) or (isinstance(frame, type(None))) :
+            print("frame is none")
             continue
         frame_image = CapturedFrame(cv.resize(frame, None, fx=0.5, fy=0.5,interpolation=cv.INTER_AREA))
         frame_image.set_face_image()
@@ -31,11 +33,11 @@ if __name__ == "__main__":
             frame_image.face_image.save(os.path.join(faces_detected_dir,str(CapturedFrame.number_of_faces_detected)+".jpg"))
             frame_image.identify()
             if frame_image.face_recognized:
-                print("".join(["face recognized as employee id=",str(frame_image.id_detected)]))
-                if not live_feed.employees_entry_today[frame_image.id_detected-1]:
+                print("".join(["face recognized as employee id=",str(frame_image.id_detected)," name=",live_feed.id_to_name_dict[frame_image.id_detected]]))
+                if not live_feed.employees_entry_today[frame_image.id_detected]:
                     now = datetime.now().strftime('%Y %m %d %H %M %S').split(' ')
-                    live_feed.register_entry(frame_image.id_detected)
-                    live_feed.employees_entry_today[frame_image.id_detected-1]=True
+                    #live_feed.register_entry(frame_image.id_detected)
+                    live_feed.employees_entry_today[frame_image.id_detected]=True
                 else:
                     print("".join(["employee id=", str(frame_image.id_detected)," already registered entry today"]))
             else:
@@ -43,7 +45,8 @@ if __name__ == "__main__":
         else:
             print("no face detected")
             frame_image.save("".join([no_faces_detected_dir,"\\",str(CapturedFrame.number_of_face_not_detected),".jpg"]))
-        c = cv.waitKey(1)
+        #c = cv.waitKey(1)
+        c=0
         if c == 27:
             break
 
