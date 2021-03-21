@@ -3,10 +3,8 @@ import pickle
 import os
 
 
-root_dir=os.getcwd()
-
-train_df=pickle.load(open(os.path.join(root_dir,'train.pkl'),"rb"))
-validation_df=pickle.load(open(os.path.join(root_dir,'validation.pkl'),"rb"))
+train_df=pickle.load(open("train.pkl","rb"))
+validation_df=pickle.load(open("validation.pkl","rb"))
 
 train_embeddings=list()
 train_ids=list()
@@ -16,12 +14,12 @@ for index,image in train_df.iterrows():
     train_ids.append(image["employee_id"])
     new_face_image=ImageInSet(image["path"]).get_face_image(image["face_indexes"])
     new_face_image.augmentate()
-    train_embeddings.append(new_face_image.get_embedding(None))
+    train_embeddings.append(np.array(new_face_image.get_embedding(None)))
     for i in range(image["number_to_augmante"]):
         train_ids.append(image["employee_id"])
         new_face_image = ImageInSet(image["path"]).get_face_image(image["face_indexes"])
         new_face_image.augmentate("train")
-        train_embeddings.append(new_face_image.get_embedding(None))
+        train_embeddings.append(np.array(new_face_image.get_embedding(None)))
 
 
 validation_embeddings=list()
@@ -31,7 +29,7 @@ for index,image in validation_df.iterrows():
     validation_ids.append(image["employee_id"])
     new_face_image=ImageInSet(image["path"]).get_face_image(image["face_indexes"])
     new_face_image.augmentate("validation")
-    validation_embeddings.append(new_face_image.get_embedding(None))
+    validation_embeddings.append(np.array(new_face_image.get_embedding(None)))
 
 
 pickle.dump(train_embeddings, open("train_embeddings.pkl", "wb"))
