@@ -14,7 +14,7 @@ from PIL import Image, ImageFile
 class ImageInSet:
 
     mtcnn = MTCNN(post_process=False, image_size=160)
-    face_detection_threshold=0.9
+    face_detection_threshold=0.95
     face_recognition_model = InceptionResnetV1(pretrained='vggface2').eval()
     name_to_id_dict=dict()
     image_size=(160,160)
