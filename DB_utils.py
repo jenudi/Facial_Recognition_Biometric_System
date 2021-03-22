@@ -15,7 +15,6 @@ from pymongo import MongoClient,errors
 id_to_name_dict = pickle.load(open("dict_cls2name.pickle", "rb"))
 
 
-
 def get_random(list_of_values):
     rand_int = randint(1, 100)
     if rand_int == 100:
@@ -37,7 +36,6 @@ def calculate_total(entry_time, exit_time):
 
 
 class BiometricSystemDb:
-
 
     def __init__(self,client,db,employees_collection,images_collection,attendance_collection):
         self.client = client
