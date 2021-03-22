@@ -54,8 +54,8 @@ class BiometricSystemDb:
                 "_id": path.split('\\')[-1],
                 "employee id": employee_id,
                 "recognized": recognized,
-                "accuracy": accuracy,
                 "face indexes": face_indexes,
+                "accuracy": accuracy,
                 "uploaded": SON({"date": SON({"year": now.year, "month": now.month, "day": now.day}),
                                  "time": SON({"hour": now.hour, "minute": now.minute, "second": now.second})})
             })
