@@ -16,7 +16,6 @@ validation_df = pd.DataFrame(columns=['path','employee_id','face_indexes'])
 images_to_save_in_dfs = list()
 
 for index,dir in enumerate(directories):
-    print(index)
     images_to_save_in_dfs.clear()
     dir_path = os.path.join(dataset_dir,dir)
     files = os.listdir(dir_path)
@@ -26,7 +25,10 @@ for index,dir in enumerate(directories):
     for image_path in images_paths:
         if len(images_to_save_in_dfs)>=3:
             break
+        print(image_path)
         image_object=ImageInSet(image_path)
+        if image_object is None:
+            continue
         image_face_indexes=image_object.get_face_indexes()
         if (not image_face_indexes is None) and (not isinstance(image_face_indexes, type(None))):
             images_to_save_in_dfs.append((image_object,image_face_indexes))
@@ -35,26 +37,21 @@ for index,dir in enumerate(directories):
         del ImageInSet.name_to_id_dict[image_object.name]
 
     if len(images_to_save_in_dfs)==1:
-        #validation_df.loc[validation_df.shape[0]]=[images_to_save_in_dfs[0][0].path,images_to_save_in_dfs[0][0].employee_id,images_to_save_in_dfs[0][1]]
-        train_df.loc[train_df.shape[0]] = [images_to_save_in_dfs[0][0].path,
-                                             images_to_save_in_dfs[0][0].employee_id, images_to_save_in_dfs[0][1], 20]
+        train_df.loc[train_df.shape[0]] = [images_to_save_in_dfs[0][0].path,images_to_save_in_dfs[0][0].employee_id, images_to_save_in_dfs[0][1], 20]
 
     if len(images_to_save_in_dfs)==2:
-        train_df.loc[train_df.shape[0]] = [images_to_save_in_dfs[0][0].path,
-                                              images_to_save_in_dfs[0][0].employee_id, images_to_save_in_dfs[0][1], 20]
-        validation_df.loc[validation_df.shape[0]] = [images_to_save_in_dfs[1][0].path,images_to_save_in_dfs[1][0].employee_id
-            ,images_to_save_in_dfs[1][1]]
+        train_df.loc[train_df.shape[0]] = [images_to_save_in_dfs[0][0].path,images_to_save_in_dfs[0][0].employee_id, images_to_save_in_dfs[0][1], 20]
+        validation_df.loc[validation_df.shape[0]] = [images_to_save_in_dfs[1][0].path,images_to_save_in_dfs[1][0].employee_id,images_to_save_in_dfs[1][1]]
 
     if len(images_to_save_in_dfs)==3:
-        train_df.loc[train_df.shape[0]] = [images_to_save_in_dfs[0][0].path,
-                                              images_to_save_in_dfs[0][0].employee_id, images_to_save_in_dfs[0][1], 10]
-        train_df.loc[train_df.shape[0]] = [images_to_save_in_dfs[1][0].path,
-                                              images_to_save_in_dfs[1][0].employee_id, images_to_save_in_dfs[1][1], 10]
+        train_df.loc[train_df.shape[0]] = [images_to_save_in_dfs[0][0].path,images_to_save_in_dfs[0][0].employee_id, images_to_save_in_dfs[0][1], 10]
+        train_df.loc[train_df.shape[0]] = [images_to_save_in_dfs[1][0].path,images_to_save_in_dfs[1][0].employee_id, images_to_save_in_dfs[1][1], 10]
+
         validation_df.loc[validation_df.shape[0]]=[images_to_save_in_dfs[2][0].path,images_to_save_in_dfs[2][0].employee_id,images_to_save_in_dfs[2][1]]
 
 pickle.dump(ImageInSet.name_to_id_dict,open("name_to_id_dict.pkl","wb"))
 
-pre_db_df=validation_df.append(train_df.drop(["number_to_augmante"],axis=1),ignore_index=True)
+pre_db_df=validation_df.append(train_df,ignore_index=True)
 db_df=pre_db_df.groupby(['employee_id'],as_index=False).aggregate({'face_indexes':list,'path':list})
 db_df.to_pickle("db_df.pkl")
 
