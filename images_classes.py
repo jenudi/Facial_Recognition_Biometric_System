@@ -1,7 +1,6 @@
 import cv2 as cv
 from aug import *
 import torch
-from PIL import Image
 import numpy as np
 from random import randint,uniform
 from facenet_pytorch import MTCNN, InceptionResnetV1
