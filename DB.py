@@ -14,7 +14,7 @@ with client:
 if __name__ == "__main__":
 
 
-    db_df=pd.read_csv(os.path.join(os.getcwd(),"db.csv"))
+    db_df=pickle.load(open(os.path.join(os.getcwd(),"db_df.pkl"),"rb"))
 
     employees=list()
     images=list()
@@ -23,13 +23,14 @@ if __name__ == "__main__":
 
     for index in range(db_df.shape[0]):
 
-        employee_id=int(db_df.iloc[index]['class'])
+        employee_id=int(db_df.iloc[index]['employee_id'])
         name=id_to_name_dict[employee_id]
 
-        employees.append(db.make_employee_doc(employee_id,employee_id,name,'/'.join(eval(db_df.iloc[index]['path'])[0].split('\\')[:-1])))
+        employees.append(db.make_employee_doc(employee_id,employee_id,name,'/'.join(db_df.iloc[index]['path'][0].split('\\')[:-1])))
 
-        for path,face_indexes in zip(eval(db_df.iloc[index]['path']),eval(db_df.iloc[index]['face_indexes'])):
-            images.append(db.make_image_doc(path,employee_id,face_indexes))
+        for path,face_indexes in zip(db_df.iloc[index]['path'],db_df.iloc[index]['face_indexes']):
+
+            images.append(db.make_image_doc(path,employee_id,list(map(float,face_indexes))))
 
         attendance.append(db.make_attendance_doc(employee_id,2021,1,1))
         attendance.append(db.make_attendance_doc(employee_id,2021,1,2,(8,randint(0,59),randint(0,59)),(17,randint(0,59),randint(0,59))))

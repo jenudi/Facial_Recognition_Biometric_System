@@ -6,11 +6,13 @@ from datetime import datetime
 from random import randint
 from math import floor
 from bson.son import SON
-from pymongo import MongoClient
+from pymongo import MongoClient,errors
 
 
-name_to_id_dict = pickle.load(open("name_to_id_dict.pkl", "rb"))
-id_to_name_dict = {value: key for key, value in name_to_id_dict.items()}
+#name_to_id_dict = pickle.load(open("name_to_id_dict.pkl", "rb"))
+#id_to_name_dict = {value: key for key, value in name_to_id_dict.items()}
+
+id_to_name_dict = pickle.load(open("dict_cls2name.pickle", "rb"))
 
 
 def get_random(list_of_values):
@@ -35,7 +37,6 @@ def calculate_total(entry_time, exit_time):
 
 class BiometricSystemDb:
 
-
     def __init__(self,client,db,employees_collection,images_collection,attendance_collection):
         self.client = client
         self.db=db
@@ -50,9 +51,9 @@ class BiometricSystemDb:
             SON({
                 "_id": path.split('\\')[-1],
                 "employee id": employee_id,
+                "face indexes": face_indexes,
                 "recognized": recognized,
                 "accuracy": accuracy,
-                "face indexes": face_indexes,
                 "uploaded": SON({"date": SON({"year": now.year, "month": now.month, "day": now.day}),
                                  "time": SON({"hour": now.hour, "minute": now.minute, "second": now.second})})
             })
