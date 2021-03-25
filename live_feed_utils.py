@@ -22,8 +22,6 @@ class LiveFeed:
 
     face_recognition_threshold = 0
     save_image_in_db_threshold=0
-    number_of_faces_recognized=0
-    number_of_faces_not_recognized=0
 
 
     def __init__(self,db):
@@ -33,6 +31,8 @@ class LiveFeed:
         #self.number_of_employees=db.get_number_of_employees()
         self.number_of_employees=len(id_to_name_dict_load.keys())
         self.employees_entry_today = [False] * self.number_of_employees
+        self.number_of_faces_recognized = 0
+        self.number_of_faces_not_recognized = 0
 
     def update_employee_entry_today_by_db(self):
         entry_today_query_find = SON(
@@ -55,24 +55,23 @@ class LiveFeed:
             date=self.date
         attendence_find = SON({"employee id": id_detected,"date": SON({"year": date.year,"month": date.month,"day": date.day})})
         attendence_query = self.db.attendance_collection.find(attendence_find)
-        if override == False and len(list(attendence_query)) > 0:
-            raise QueryError(' '.join(
-                ["employee number", str(id_detected), "already registered entry at date", str(date) \
-                 + "\nmust allow override in order to update entry"]))
 
-        elif override and len(list(attendence_query)) > 0:
-            date_query = {"employee id": id_detected,
-                          "date": SON({"year": date.year, "month": date.month,"day": date.day})}
-            update_entry = {"$set": {"entry": SON(
-                {"hour": time.hour, "minute": time.minute,"second": time.second})}}
-            self.db.attendance_collection.update_one(date_query, update_entry)
-            print("".join(["database entry updated for employee id=" + str(id_detected)]))
+        if len(list(attendence_query)) > 0:
+            if override:
+                date_query = {"employee id": id_detected,
+                              "date": SON({"year": date.year, "month": date.month,"day": date.day})}
+                update_entry = {"$set": {"entry": SON(
+                    {"hour": time.hour, "minute": time.minute,"second": time.second})}}
+                self.db.attendance_collection.update_one(date_query, update_entry)
+                print("".join(["database entry updated for employee id=" + str(id_detected)]))
+            else:
+                raise QueryError(' '.join(
+                    ["employee number", str(id_detected), "already registered entry at date", str(date) \
+                    + "\nmust allow override in order to update entry"]))
 
         else:
             attendence_insert = SON({
-                #"_id": '-'.join([str(id_detected), str(entry_date_and_time[0]), str(entry_date_and_time[1]),
-                 #                str(entry_date_and_time[2])]),
-                "_id":id_detected,
+                "_id": '-'.join([str(id_detected), str(date.year), str(date.day),str(date.day)]),
                 "employee id": id_detected,
                 "date": SON({"year": date.year, "month": date.month,
                              "day": date.day}),
@@ -95,7 +94,8 @@ class LiveFeed:
         entry_query_list = list(entry_query)
         if len(entry_query_list) == 0:
             raise QueryError(
-                ' '.join(["employee id=", str(id_detected), "didn't register entry at date", str(date)]))
+                ' '.join(["employee id=", str(id_detected), "didn't register entry at date", str(date),
+                          "and therefore cannot register exit"]))
 
         attendance_doc_with_no_none_exit_find = SON({"employee id": id_detected,
                                                      "date": SON({"year": date.year,
