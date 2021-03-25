@@ -97,14 +97,14 @@ class LiveFeed:
                 ' '.join(["employee id=", str(id_detected), "didn't register entry at date", str(date),
                           "and therefore cannot register exit"]))
 
-        attendance_doc_with_no_none_exit_find = SON({"employee id": id_detected,
+        already_registered_exit_find = SON({"employee id": id_detected,
                                                      "date": SON({"year": date.year,
                                                                   "month": date.month,
                                                                   "day": date.day}),
                                                      "exit": {"$ne": None}})
-        attendance_doc_with_no_none_exit_query = self.db.attendance_collection.find(
-            attendance_doc_with_no_none_exit_find)
-        if override == False and len(list(attendance_doc_with_no_none_exit_query)) > 0:
+        already_registered_exit_query = self.db.attendance_collection.find(
+            already_registered_exit_find)
+        if override == False and len(list(already_registered_exit_query)) > 0:
             raise QueryError(' '.join(
                 ["employee id=", str(id_detected), "already registered exit at date", str(date),
                  "\nmust allow override in order to update exit"]))
@@ -112,21 +112,20 @@ class LiveFeed:
         else:
             date_query = {"employee id": id_detected,
                           "date": SON({"year": date.year, "month": date.month, "day": date.day})}
-            update_exit = {"$set": {"exit": SON({"hour": time.hour, "minute": time.minute, "second": time.second})}}
-            self.db.attendance_collection.update_one(date_query, update_exit)
-            print("".join(["database exit updated for employee id=", str(id_detected)]))
 
             update_entry_date_and_time = [entry_query_list[0]["entry"]["hour"], entry_query_list[0]["entry"]["minute"],
                                           entry_query_list[0]["entry"]["second"]]
             update_exit_date_and_time = [time.hour, time.minute,time.second]
             hours, minutes, seconds = calculate_total(update_entry_date_and_time, update_exit_date_and_time)
 
-            update_total = {"$set": {"total": SON({"hours": hours, "minutes": minutes, "seconds": seconds})}}
-            self.db.attendance_collection.update_one(date_query, update_total)
-            if len(list(attendance_doc_with_no_none_exit_query)) > 0:
-                print("".join(["database total updated for employee id=", str(id_detected)]))
+            update_exit_and_total = {"$set": {"exit": SON({"hour": time.hour, "minute": time.minute, "second": time.second}),
+                                              "total": SON({"hours": hours, "minutes": minutes, "seconds": seconds})}}
+
+            self.db.attendance_collection.update_one(date_query, update_exit_and_total)
+            if override:
+                print("".join(["database exit and total updated for employee id=", str(id_detected)]))
             else:
-                print("".join(["database total registered for employee id=", str(id_detected)]))
+                print("".join(["database exit and total registered for employee id=", str(id_detected)]))
 
 
 
