@@ -33,6 +33,8 @@ class LiveFeed:
         self.employees_entry_today = [False] * self.number_of_employees
         self.number_of_faces_recognized = 0
         self.number_of_faces_not_recognized = 0
+        self.number_of_faces_detected = 0
+        self.number_of_face_not_detected = 0
 
     def update_employee_entry_today_by_db(self):
         entry_today_query_find = SON(
@@ -134,8 +136,6 @@ class CapturedFrame(ImageInSet):
     ANN_model = InceptionResnetV1(classify=True, pretrained='vggface2', num_classes=len(id_to_name_dict_load.keys()))
     ANN_model.load_state_dict(torch.load("ann_model.pth",map_location=torch.device("cpu")))
     KNN_model=pickle.load(open("knn_model.pkl","rb"))
-    number_of_faces_detected=0
-    number_of_face_not_detected=0
 
     def __init__(self,values):
         self.values=values
@@ -147,7 +147,7 @@ class CapturedFrame(ImageInSet):
         self.id_detected=None
         self.recognition_probability=None
 
-    def set_face_image(self):
+    def set_face_image(self,live_feed):
         self.face_indexes=self.get_face_indexes()
         self.face_detected=True if (self.face_indexes is not None) and not (isinstance(self.face_indexes, type(None))) else False
         if self.face_detected:
@@ -155,9 +155,9 @@ class CapturedFrame(ImageInSet):
             self.face_image = self.get_face_image(self.face_indexes)
             #os.remove("face_image_temp.jpg")
             #self.face_image=self.values[int(indexes_box[1]):int(indexes_box[3]), int(indexes_box[0]):int(indexes_box[2])]
-            CapturedFrame.number_of_faces_detected+=1
+            live_feed.number_of_faces_detected+=1
         else:
-            CapturedFrame.number_of_face_not_detected += 1
+            live_feed.number_of_face_not_detected += 1
 
     def identify(self,model):
         if not self.face_detected:
@@ -192,8 +192,8 @@ class CapturedFrame(ImageInSet):
             number_of_employee_images_str="0"*(4-len(str(number_of_employee_images)))+str(number_of_employee_images)
         else:
             number_of_employee_images_str=str(number_of_employee_images)
-        employee_path=db.employees_collection.find({"_id":self.id_detected},{"_id":0,"images directory path":1})[0]["images directory path"]
-        self.save(employee_path+"\\"+self.name+"_"+number_of_employee_images_str+".jpg")
+        employee_images_path=db.employees_collection.find({"_id":self.id_detected},{"_id":0,"images directory path":1})[0]["images directory path"]
+        self.save(employee_images_path+"\\"+self.name+"_"+number_of_employee_images_str+".jpg")
         #delete the next line later
         os.remove(self.path)
         image_doc=db.make_image_doc(self.path,self.id_detected,self.face_indexes,True,self.recognition_probability)

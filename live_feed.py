@@ -28,10 +28,10 @@ if __name__ == "__main__":
             print("frame is none")
             continue
         frame_image = CapturedFrame(cv.resize(frame, None, fx=0.5, fy=0.5,interpolation=cv.INTER_AREA))
-        frame_image.set_face_image()
+        frame_image.set_face_image(live_feed)
         if frame_image.face_detected:
             print("face detected")
-            frame_image.face_image.save(os.path.join(faces_detected_dir,str(CapturedFrame.number_of_faces_detected)+".jpg"))
+            frame_image.face_image.save(os.path.join(faces_detected_dir,str(live_feed.number_of_faces_detected)+".jpg"))
             frame_image.identify("ann")
             end = time.time()
             if frame_image.recognition_probability>=live_feed.face_recognition_threshold:
@@ -50,7 +50,7 @@ if __name__ == "__main__":
                 print("no face recognized")
         else:
             print("no face detected")
-            frame_image.save("".join([no_faces_detected_dir,"\\",str(CapturedFrame.number_of_face_not_detected),".jpg"]))
+            frame_image.save("".join([no_faces_detected_dir,"\\",str(live_feed.number_of_face_not_detected),".jpg"]))
         #c = cv.waitKey(1)
         c=0
         if c == 27:
