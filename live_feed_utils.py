@@ -132,8 +132,8 @@ class LiveFeed:
 
 
 class NewNet(nn.Module):
-    def _init_(self, num_classes=1):
-        super(NewNet,self)._init_()
+    def __init__(self, num_classes=1):
+        super(NewNet, self).__init__()
         self.model = InceptionResnetV1(classify=True,pretrained='vggface2', num_classes=num_classes)#.to(device) #.to(self.device)
         self.dropout1 = nn.Dropout2d(p=0.7)
         self.dropout2 = nn.Dropout2d(p=0.7)
@@ -150,16 +150,11 @@ class NewNet(nn.Module):
         return linear_output
 
 
-
-
-
-
-
 class CapturedFrame(ImageInSet):
 
     #ann_model = InceptionResnetV1(classify=True, pretrained='vggface2', num_classes=len(id_to_name_dict_load.keys()))
     #ann_model.load_state_dict(torch.load("ann_model.pth",map_location=torch.device("cpu")))
-    ann_model = NewNet()
+    ann_model = NewNet(num_classes=len(id_to_name_dict_load.keys()))
     ann_model.load_state_dict(torch.load('ann_model.pth',map_location=torch.device("cpu")))
 
     knn_model=pickle.load(open("knn_model.pkl","rb"))
