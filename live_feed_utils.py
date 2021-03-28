@@ -10,6 +10,7 @@ import pickle
 from datetime import datetime,date
 from bson.son import SON
 import time
+import torch.nn as nn
 
 
 #name_to_id_dict = pickle.load(open("name_to_id_dict.pkl", "rb"))
@@ -130,12 +131,38 @@ class LiveFeed:
                 print("".join(["database exit and total registered for employee id=", str(id_detected)]))
 
 
+class NewNet(nn.Module):
+    def _init_(self, num_classes=1):
+        super(NewNet,self)._init_()
+        self.model = InceptionResnetV1(classify=True,pretrained='vggface2', num_classes=num_classes)#.to(device) #.to(self.device)
+        self.dropout1 = nn.Dropout2d(p=0.7)
+        self.dropout2 = nn.Dropout2d(p=0.7)
+        self.head_linear = nn.Linear(num_classes,num_classes,bias=True)
+        self.head_linear2 = nn.Linear(num_classes,num_classes,bias=True) # MAYBE ADD NATCHNORM
+
+    def forward(self, x):
+
+        x = self.model(x)
+        x = self.dropout1(x)
+        x = F.relu(self.head_linear(x))
+        x = self.dropout2(x)
+        linear_output = self.head_linear2(x)
+        return linear_output
+
+
+
+
+
+
 
 class CapturedFrame(ImageInSet):
 
-    ANN_model = InceptionResnetV1(classify=True, pretrained='vggface2', num_classes=len(id_to_name_dict_load.keys()))
-    ANN_model.load_state_dict(torch.load("ann_model.pth",map_location=torch.device("cpu")))
-    KNN_model=pickle.load(open("knn_model.pkl","rb"))
+    #ann_model = InceptionResnetV1(classify=True, pretrained='vggface2', num_classes=len(id_to_name_dict_load.keys()))
+    #ann_model.load_state_dict(torch.load("ann_model.pth",map_location=torch.device("cpu")))
+    ann_model = NewNet()
+    ann_model.load_state_dict(torch.load('ann_model.pth',map_location=torch.device("cpu")))
+
+    knn_model=pickle.load(open("knn_model.pkl","rb"))
 
     def __init__(self,values):
         self.values=values
@@ -169,15 +196,15 @@ class CapturedFrame(ImageInSet):
             resized_img = tensor_img.permute(2, 0, 1)
             unsqueezed_img=resized_img.unsqueeze(0)
             with torch.no_grad():
-                CapturedFrame.ANN_model.eval()
-                output = CapturedFrame.ANN_model(unsqueezed_img)
+                CapturedFrame.ann_model.eval()
+                output = CapturedFrame.ann_model(unsqueezed_img)
             self.recognition_probability=float(torch.max(F.softmax(output,dim=1),1)[0].item())
             self.id_detected = int(torch.max(F.softmax(output, dim=1), 1)[1].item())
         elif model=="knn":
             self.face_image.augmentate()
             face_embedding=self.face_image.get_embedding(None,as_numpy=True)
-            self.id_detected = int(CapturedFrame.KNN_model.predict([face_embedding])[0])
-            self.recognition_probability = float(CapturedFrame.KNN_model.predict_proba([face_embedding])[0][self.id_detected])
+            self.id_detected = int(CapturedFrame.knn_model.predict([face_embedding])[0])
+            self.recognition_probability = float(CapturedFrame.knn_model.predict_proba([face_embedding])[0][self.id_detected])
         print("recognition probability: " + str(self.recognition_probability))
 
     def set_name(self,id_to_name_dict):
