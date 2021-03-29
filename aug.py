@@ -1,4 +1,3 @@
-import cv2 as cv
 import numpy as np
 import imgaug.augmenters as iaa
 
@@ -22,15 +21,7 @@ def aug_img(img):
                        iaa.Affine(shear=(-16, 16)),
                        iaa.PerspectiveTransform(scale=(0.01, 0.15)),])
     simetimes2 = iaa.Sometimes(0.25, two)
-    simetimes3 = iaa.Sometimes(0.2,one)
-    seq = iaa.Sequential([three,simetimes2,simetimes3],random_order=True,)
-    seq2 = iaa.Sequential([seq,iaa.Resize(160)],random_order=False)
-    images_aug = seq2(images=img)
-    return images_aug[0]
-
-
-def aug_img2(img):
-    img = np.expand_dims(img, axis=0)
-    seq2 = iaa.Sequential([iaa.Resize(160)], random_order=False)
-    images_aug = seq2(images=img)
+    simetimes1 = iaa.Sometimes(0.5,one)
+    seq = iaa.Sequential([three,simetimes2,simetimes1],random_order=True,)
+    images_aug = seq(images=img)
     return images_aug[0]
