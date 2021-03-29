@@ -1,5 +1,4 @@
 from images_classes import *
-from aug import aug_img2
 from torch.nn import functional as F
 import torch
 from DB_utils import *
@@ -11,6 +10,7 @@ from datetime import datetime,date
 from bson.son import SON
 import time
 import torch.nn as nn
+from ANN import NewNet
 
 
 #name_to_id_dict = pickle.load(open("name_to_id_dict.pkl", "rb"))
@@ -131,25 +131,6 @@ class LiveFeed:
                 print("".join(["database exit and total registered for employee id=", str(id_detected)]))
 
 
-class NewNet(nn.Module):
-    def __init__(self, num_classes=1):
-        super(NewNet, self).__init__()
-        self.model = InceptionResnetV1(classify=True,pretrained='vggface2', num_classes=num_classes)#.to(device) #.to(self.device)
-        self.dropout1 = nn.Dropout2d(p=0.7)
-        self.dropout2 = nn.Dropout2d(p=0.7)
-        self.head_linear = nn.Linear(num_classes,num_classes,bias=True)
-        self.head_linear2 = nn.Linear(num_classes,num_classes,bias=True) # MAYBE ADD NATCHNORM
-
-    def forward(self, x):
-
-        x = self.model(x)
-        x = self.dropout1(x)
-        x = F.relu(self.head_linear(x))
-        x = self.dropout2(x)
-        linear_output = self.head_linear2(x)
-        return linear_output
-
-
 class CapturedFrame(ImageInSet):
 
     #ann_model = InceptionResnetV1(classify=True, pretrained='vggface2', num_classes=len(id_to_name_dict_load.keys()))
@@ -157,7 +138,7 @@ class CapturedFrame(ImageInSet):
     ann_model = NewNet(num_classes=len(id_to_name_dict_load.keys()))
     ann_model.load_state_dict(torch.load('ann_model.pth',map_location=torch.device("cpu")))
 
-    knn_model=pickle.load(open("knn_model.pkl","rb"))
+    #knn_model=pickle.load(open("knn_model.pkl","rb"))
 
     def __init__(self,values):
         self.values=values
@@ -185,14 +166,10 @@ class CapturedFrame(ImageInSet):
         if not self.face_detected:
             raise FrameException("face must be detected in order to perform identification")
         if model=="ann":
-            self.face_image.augmentate()
-            norm_image = cv.normalize(self.face_image.values, None, alpha=0, beta=1, norm_type=cv.NORM_MINMAX, dtype=cv.CV_32F)
-            tensor_img = torch.tensor(norm_image)
-            resized_img = tensor_img.permute(2, 0, 1)
-            unsqueezed_img=resized_img.unsqueeze(0)
+            img = self.norm_without_aug()
             with torch.no_grad():
                 CapturedFrame.ann_model.eval()
-                output = CapturedFrame.ann_model(unsqueezed_img)
+                output = CapturedFrame.ann_model(img)
             self.recognition_probability=float(torch.max(F.softmax(output,dim=1),1)[0].item())
             self.id_detected = int(torch.max(F.softmax(output, dim=1), 1)[1].item())
         elif model=="knn":

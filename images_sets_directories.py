@@ -101,10 +101,10 @@ for dir in directories:
         image_for_aug = new_train_image.values.reshape((1,) + new_train_image.values.shape)
 
         i=0
-        for batch in datagen.flow(image_for_aug, batch_size=1, save_to_dir=new_train_dir, save_prefix='aug', save_format='jpg'):
-            i += 1
-            if i>= number_of_augmentations_per_train_image:
-                break
+        #for batch in datagen.flow(image_for_aug, batch_size=1, save_to_dir=new_train_dir, save_prefix='aug', save_format='jpg'):
+         #   i += 1
+          #  if i>= number_of_augmentations_per_train_image:
+           #     break
 
     for new_validation_image in cur_validation_set:
         new_validation_dir='\\'.join([validation_dir, dir])

@@ -8,6 +8,8 @@ from torch import from_numpy
 from pymongo import MongoClient
 #from face_recognition import face_locations
 #from PIL import Image, ImageFile
+import albumentations as A
+from albumentations.pytorch import ToTensor
 
 
 class ImageInSet:
@@ -17,6 +19,8 @@ class ImageInSet:
     face_recognition_model = InceptionResnetV1(pretrained='vggface2').eval()
     name_to_id_dict=dict()
     image_size=(160,160)
+    norm = A.Compose([A.Resize(160, 160, interpolation=1, always_apply=True, p=1),
+                      A.Normalize(mean=[0, 0, 0], std=[1, 1, 1], max_pixel_value=255, ), ToTensor(), ])
 
     def __init__(self,path):
         self.values=cv.imread(path)
@@ -49,11 +53,13 @@ class ImageInSet:
             return None
     '''
 
-    def augmentate(self,type="validation"):
-        if type=="train":
-            self.values=aug_img(self.values)
-        else:
-            self.values=aug_img2(self.values)
+    def norm_without_aug(self):
+        img = self.values()
+        indexes = self.get_face_indexes()
+        img = img[indexes[1]:indexes[3], indexes[0]:indexes[2]]
+        aug = ImageInSet.norm(image=img)
+        img = aug["image"]
+        return img.unsqueeze(0)
 
     def get_face_indexes(self):
         boxes, probs = ImageInSet.mtcnn.detect(self.values, landmarks=False)
@@ -68,10 +74,9 @@ class ImageInSet:
         if indexes is None:
             indexes=self.get_face_indexes()
         return FaceImage(self.values[indexes[1]:indexes[3], indexes[0]:indexes[2]])
-        ''''
-        face_image=pil_image.crop(indexes_box)
-        return FaceImage(np.array(face_image))
-        '''
+
+        #face_image=pil_image.crop(indexes_box)
+        #return FaceImage(np.array(face_image))
 
     def normalize_by_train_values(self,train_mean,train_std):
         return (self.values - train_mean) / train_std

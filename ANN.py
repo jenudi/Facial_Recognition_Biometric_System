@@ -6,33 +6,37 @@ from torch.nn import functional as F
 from matplotlib import pyplot as plt
 from sklearn.metrics import f1_score
 from images_classes import *
-from aug import *
+#from aug import *
 from tqdm import tqdm
 import torch
-from new_main import train_df,validation_df
+#from new_main import train_df,validation_df
 import albumentations as A
 from albumentations.pytorch import ToTensor
 from PIL import Image, ImageFile
-from new_main import sampler
+#from new_main import sampler
 
 
 class NewNet(nn.Module):
     def __init__(self, num_classes=1):
         super(NewNet,self).__init__()
-        self.model = InceptionResnetV1(classify=True,pretrained='vggface2', num_classes=num_classes)#.to(device) #.to(self.device)
-        self.dropout1 = nn.Dropout2d(p=0.7)
-        self.dropout2 = nn.Dropout2d(p=0.7)
-        self.head_linear = nn.Linear(num_classes,num_classes,bias=True)
-        self.head_linear2 = nn.Linear(num_classes,num_classes,bias=True) # MAYBE ADD NATCHNORM
+        self.num_classes = num_classes
+        self.model = InceptionResnetV1(classify=True,pretrained='vggface2', num_classes=self.num_classes)
+        self.drop = nn.Dropout(0.5)
+        self.head_linear = nn.Linear(self.num_classes,self.num_classes,bias=True)
+        self.change_model()
 
     def forward(self, x):
 
         x = self.model(x)
-        x = self.dropout1(x)
-        x = F.relu(self.head_linear(x))
-        x = self.dropout2(x)
-        linear_output = self.head_linear2(x)
-        return linear_output
+        x = self.drop(x)
+        x = self.head_linear(x)
+        return x
+
+    def change_model(self):
+        self.model.dropout.p = 0.6
+        self.model.last_linear.out_features = self.num_classes
+        self.model.last_bn.num_features = self.num_classes
+        self.model.logits.in_features = self.num_classes
 
 
 class FRBSDataset(Dataset):
@@ -169,9 +173,9 @@ class Ann:
                torch.max(F.softmax(logits_g.detach(), dim=1), 1)[1]
 
 
-a = Ann(batch_size=300, epochs=20, lr=0.0001, l2=0.001)
+#a = Ann(batch_size=300, epochs=20, lr=0.0001, l2=0.001)
 #%%
-y_pred, y_proba = a.main()
+#y_pred, y_proba = a.main()
 
 #y_true = pd.read_csv(args.val)
 #print(f1_score(y_true['id'], l, average='micro'))

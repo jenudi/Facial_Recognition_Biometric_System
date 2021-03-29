@@ -1,10 +1,13 @@
 from live_feed_utils import *
+import numpy as np
+import cv2 as cv
+
 
 
 if __name__ == "__main__":
 
     live_feed = LiveFeed(db)
-    live_feed.update_employee_entry_today_by_db()
+    #live_feed.update_employee_entry_today_by_db()
     #live_feed.update_id_to_name_dict_by_db()
 
     faces_detected_dir='\\'.join([os.getcwd(),'faces detected in live feed'])
@@ -17,6 +20,7 @@ if __name__ == "__main__":
 
 
     cap = cv.VideoCapture(0,cv.CAP_DSHOW)
+    #cap = cv.VideoCapture(0)
     if not cap.isOpened():
         raise IOError("Cannot open webcam")
 
@@ -40,19 +44,18 @@ if __name__ == "__main__":
                 print("".join(["face recognized number " +str(live_feed.number_of_faces_recognized) +" as ",frame_image.name, " in " + "{:.3f}".format(end-start) + " seconds"]))
                 if frame_image.recognition_probability>=live_feed.save_image_in_db_threshold:
                     frame_image.save_image_to_db(live_feed.db)
-                if not live_feed.employees_entry_today[frame_image.id_detected]:
-                    live_feed.register_entry(frame_image.id_detected,override=True)
-                    live_feed.employees_entry_today[frame_image.id_detected]=True
-                else:
-                    print("".join(["employee id=", str(frame_image.id_detected)," already registered entry today"]))
+                #if not live_feed.employees_entry_today[frame_image.id_detected]:
+                 #   live_feed.register_entry(frame_image.id_detected,override=True)
+                  #  live_feed.employees_entry_today[frame_image.id_detected]=True
+                #else:
+                 #   print("".join(["employee id=", str(frame_image.id_detected)," already registered entry today"]))
             else:
                 live_feed.number_of_faces_not_recognized+=1
                 print("face not recognized number " + str(live_feed.number_of_faces_not_recognized))
         else:
             print("face not detected number "+ str(live_feed.number_of_face_not_detected))
             frame_image.save("".join([no_faces_detected_dir,"\\",str(live_feed.number_of_face_not_detected),".jpg"]))
-        #c = cv.waitKey(1)
-        c=0
+        c = cv.waitKey(1)
         if c == 27:
             break
 
