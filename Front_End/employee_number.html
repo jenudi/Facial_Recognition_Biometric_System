@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% set page_head_title = 'sign_in' %}
+
+{% block page_head_css %}
+    <link rel="stylesheet" href="{{ url_for('sign_in.static', filename='css/sign_in.css') }}"/>
+    <script type="text/javascript" src="{{ url_for('sign_in.static', filename = 'js/sign_in.js') }}"></script>
+
+{% endblock %}
+{% block page_body_main_content %}
+    <div class="top-block"> <!--Title and sub-title-->
+            <h1 class="heading-1">Facial Recognition Biometric System - Log-in</h1>
+    </div>
+    <form method="post" action="/sign_up" class="registration-form" onsubmit="return PassValidate()"> <!--ID form-->
+        <div class="registration-form">
+            <label for="id-number">Please enter your ID number:</label>
+            <input type="number" name="number" placeholder="ID" id="id-number" title="Please enter your ID" required/>
+        </div>
+        <div>
+            <input type="submit" value="Submit" class="button-default"/>
+        </div>
+    </form>
+
+{% endblock %}
