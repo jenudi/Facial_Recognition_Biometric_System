@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% set page_head_title = 'search_employee' %}
+
+{% block page_head_css %}
+    <link rel="stylesheet" href="{{ url_for('e_search.static', filename='css/e_search.css') }}"/>
+    <script type="text/javascript" src="{{ url_for('e_search.static', filename = 'js/e_search.js') }}"></script>
+
+{% endblock %}
+{% block page_body_main_content %}
+    <div class="container">
+        <form method="post" action="/search" class="search">
+            <!--all the text in the form will be inside the fill-in space-->
+            <div class="registration-form">
+                <h1 class="heading-1">Search Employee</h1>
+            </div>
+            <div class="registration-form">
+                <label for="user-name">Name:</label>
+                <input type="text" name="user-name" placeholder="Employee name" id="user-name" title="Please enter employee name"/>
+                <input type="submit" value="Submit" class="button-default"/>
+            </div>
+            <div class="registration-form">
+                <label for="id-number">ID number:</label>
+                <input type="number" name="number" placeholder="ID number" id="id-number" title="Please enter enployee ID"/>
+                <input type="submit" value="Submit" class="button-default"/>
+            </div>
+            <div class="registration-form">
+                <label for="employee-number">Employee number:</label>
+                <input type="number" name="number" placeholder="ID number" id="employee-number" title="Please enter enployee number"/>
+                <input type="submit" value="Submit" class="button-default"/>
+            </div>
+            <div class="registration-form">
+                <label for="image">Image:</label>
+                <input type="file" name="image" id="image"/>
+                <input type="submit"/>
+            </div>
+        </form>
+    </div>
+
+{% endblock %}
