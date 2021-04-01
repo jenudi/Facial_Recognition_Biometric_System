@@ -1,0 +1,22 @@
+<link rel="stylesheet" href="{{ url_for('main_menu.static', filename='css/main-menu.css') }}"/>
+{%
+    set menu_items = {
+        <!--'homepage': '/',-->
+        'Enter New Employee': url_for('e_new.index'),
+        'Employee Search': url_for('e_search.index'),
+        'Employee List': url_for('e_list.index'),
+        'Attendance Report Generator': url_for('e_report.index'),
+        'Personal Details': url_for('e_details.index'),
+        'Leave System': url_for('leave.index'),
+    }
+%}
+<div class="nav-bar">
+{% for item in menu_items %}
+        <a class="nav-bar-link"
+            href="{{ menu_items[item] }}"
+                {% if menu_items[item] == request.path %}
+                    class="nav-bar-link active"
+                {% endif %}
+        >{{ item | capitalize }}</a>
+{% endfor %}
+</div>
