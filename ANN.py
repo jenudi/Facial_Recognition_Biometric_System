@@ -20,23 +20,35 @@ class NewNet(nn.Module):
     def __init__(self, num_classes=1):
         super(NewNet,self).__init__()
         self.num_classes = num_classes
-        self.model = InceptionResnetV1(classify=True,pretrained='vggface2', num_classes=self.num_classes)
-        self.drop = nn.Dropout(0.5)
-        self.head_linear = nn.Linear(self.num_classes,self.num_classes,bias=True)
+        self.model = InceptionResnetV1(classify=True,pretrained='vggface2', num_classes=self.num_classes)#.to(device) #.to(self.device)
+        #self.drop = nn.Dropout(0.4)
+        #self.head_linear = nn.Linear(self.num_classes,self.num_classes,bias=True)
         self.change_model()
-
+        self.layers = nn.ModuleList([
+                                    #nn.ReLU(),
+                                     nn.Dropout(0.1),
+                                     # nn.BatchNorm1d(self.num_classes),
+                                      nn.Linear(self.num_classes,self.num_classes,bias=True),
+                                      nn.Dropout(0.1),
+                                      nn.Linear(self.num_classes,self.num_classes,bias=True),
+                                      #nn.ReLU(),
+                                      nn.BatchNorm1d(self.num_classes),
+                                      nn.Dropout(0.1),
+                                      nn.Linear(self.num_classes,self.num_classes,bias=True),])
     def forward(self, x):
 
         x = self.model(x)
-        x = self.drop(x)
-        x = self.head_linear(x)
+        for layer in self.layers:
+          x = layer(x)
         return x
 
     def change_model(self):
-        self.model.dropout.p = 0.6
-        self.model.last_linear.out_features = self.num_classes
-        self.model.last_bn.num_features = self.num_classes
-        self.model.logits.in_features = self.num_classes
+      #self.model.dropout.p = 0.1
+      self.model.last_linear.out_features = self.num_classes
+      self.model.last_bn.num_features = self.num_classes
+      self.model.logits.in_features = self.num_classes
+      #nn.Dropout(0.5,inplace=False)
+      #self.model.add_module('l',nn.Linear(self.num_classes,self.num_classes,bias=True))
 
 
 class FRBSDataset(Dataset):
