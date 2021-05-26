@@ -162,6 +162,7 @@ class Ann:
             #self.all_training_loss.append(trn_loss.detach() / len(self.train_dl))
             val_loss = self.validation(epoch_ndx, self.val_dl)
             self.all_val_loss.append(val_loss.detach() / len(self.val_dl))
+        self.train_data.update_database()
         print("Finished")
 
     def training(self, epoch_ndx, train_dl):
