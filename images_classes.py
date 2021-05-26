@@ -7,9 +7,9 @@ from facenet_pytorch import MTCNN, InceptionResnetV1
 from torch import from_numpy
 from pymongo import MongoClient
 #from face_recognition import face_locations
-#from PIL import Image, ImageFile
+from PIL import Image, ImageFile
 import albumentations as A
-from albumentations.pytorch import ToTensor
+from albumentations.pytorch import ToTensorV2
 
 
 class ImageInSet:
@@ -20,11 +20,14 @@ class ImageInSet:
     name_to_id_dict=dict()
     image_size=(160,160)
     norm = A.Compose([A.Resize(160, 160, interpolation=1, always_apply=True, p=1),
-                      A.Normalize(mean=[0, 0, 0], std=[1, 1, 1], max_pixel_value=255, ), ToTensor(), ])
+                      A.Normalize(mean=[0, 0, 0], std=[1, 1, 1], max_pixel_value=255, ), ToTensorV2(), ])
+
+    #face_recognition_threshold = 0.95
+    #face_cascade = cv.CascadeClassifier('haarcascade_frontalface_default.xml')
 
     def __init__(self,path):
-        self.values=cv.imread(path)
-        #self.values = Image.open(path)
+        #self.values=cv.imread(path)
+        self.values = Image.open(path)
         self.path=path
         self.dir=self.path.split('\\')[-2]
         self.file_name=self.path.split('\\')[-1]
@@ -54,13 +57,25 @@ class ImageInSet:
     '''
 
     def norm_without_aug(self):
-        img = self.values()
-        indexes = self.get_face_indexes()
-        img = img[indexes[1]:indexes[3], indexes[0]:indexes[2]]
+        img = self.values
+        #indexes = self.get_face_indexes()
+        #img = img[indexes[1]:indexes[3], indexes[0]:indexes[2]]
         aug = ImageInSet.norm(image=img)
         img = aug["image"]
-        return img.unsqueeze(0)
+        self.values = img.unsqueeze(0)
 
+    def get_face_indexes(self):
+        boxes,_ = ImageInSet.mtcnn.detect(self.values, landmarks=False)
+        if (not boxes is None) and (not isinstance(boxes, type(None))):
+            box = list(boxes[0])
+            if any(box[2:]) < 0:
+                return None
+            face_indexes=[int(b) for b in box]
+            return face_indexes
+        else:
+            return None
+
+    """"
     def get_face_indexes(self):
         boxes, probs = ImageInSet.mtcnn.detect(self.values, landmarks=False)
         if (not boxes is None) and (not isinstance(boxes, type(None))) and (probs[0]>= ImageInSet.face_detection_threshold) and (all(boxes[0]>0)):
@@ -69,6 +84,7 @@ class ImageInSet:
             #return boxes[0]
         else:
             return None
+    """
 
     def get_face_image(self,indexes=None):
         if indexes is None:

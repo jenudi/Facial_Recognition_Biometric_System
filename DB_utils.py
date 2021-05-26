@@ -12,7 +12,7 @@ from pymongo import MongoClient,errors
 #name_to_id_dict = pickle.load(open("name_to_id_dict.pkl", "rb"))
 #id_to_name_dict = {value: key for key, value in name_to_id_dict.items()}
 
-id_to_name_dict = pickle.load(open("dict_cls2name.pickle", "rb"))
+#id_to_name_dict = pickle.load(open("dict_cls2name.pkl", "rb"))
 
 
 def get_random(list_of_values):
@@ -45,7 +45,7 @@ class BiometricSystemDb:
         self.attendance_collection=attendance_collection
 
 
-    def make_image_doc(self, path, employee_id, face_indexes, recognized=False, accuracy=None):
+    def make_image_doc(self, path, employee_id, face_indexes,recognized=False):
         now = datetime.now()
         return \
             SON({
@@ -53,7 +53,6 @@ class BiometricSystemDb:
                 "employee id": employee_id,
                 "face indexes": face_indexes,
                 "recognized": recognized,
-                "accuracy": accuracy,
                 "uploaded": SON({"date": SON({"year": now.year, "month": now.month, "day": now.day}),
                                  "time": SON({"hour": now.hour, "minute": now.minute, "second": now.second})})
             })
@@ -73,7 +72,8 @@ class BiometricSystemDb:
 
 
     def make_employee_doc(self, employee_id, employee_number, name, images_directory_path,
-                          branch=get_random(['A', 'B', 'C', 'D']), admin=False):
+                          pic_num,branch=get_random(['A', 'B', 'C', 'D']),accuracy=None,
+                          model_cls=None,admin=False):
         return \
             SON({
                 "_id": employee_id,
@@ -81,7 +81,10 @@ class BiometricSystemDb:
                 "name": name,
                 "images directory path": images_directory_path,
                 "branch": branch,
-                "admin": admin
+                "admin": admin,
+                "pic num": pic_num,
+                "accuracy": accuracy,
+                "model_cls": model_cls,
             })
 
 

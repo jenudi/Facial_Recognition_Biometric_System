@@ -1,27 +1,25 @@
-import numpy as np
-import imgaug.augmenters as iaa
+#pip install git+https://github.com/albumentations-team/albumentations
+import albumentations as A
+from albumentations.pytorch import ToTensorV2
+import cv2 as cv
 
-
-def aug_img(img):
-    img = np.expand_dims(img, axis=0)
-    one = iaa.OneOf([iaa.GaussianBlur(sigma=(0.0, 3.0)),
-                     iaa.AverageBlur(k=(2, 11)),
-                     iaa.AverageBlur(k=((5, 11), (1, 3))),
-                     iaa.MedianBlur(k=(3, 11)),
-                     iaa.MeanShiftBlur(),])
-    two = iaa.OneOf([iaa.WithBrightnessChannels(iaa.Add((-50, 50))),
-                     iaa.MultiplyAndAddToBrightness(mul=(0.5, 1.5), add=(-30, 30)),
-                     iaa.MultiplyBrightness((0.5, 1.5)),
-                     iaa.AddToBrightness((-30, 30)),
-                     iaa.MultiplyHueAndSaturation((0.5, 1.5), per_channel=True),
-                     iaa.RemoveSaturation()])
-    three = iaa.OneOf([iaa.Affine(scale=(0.5, 1.5)),
-                       iaa.Affine(translate_percent={"x": (-0.2, 0.2), "y": (-0.2, 0.2)}),
-                       iaa.Affine(rotate=(-45, 45)),
-                       iaa.Affine(shear=(-16, 16)),
-                       iaa.PerspectiveTransform(scale=(0.01, 0.15)),])
-    simetimes2 = iaa.Sometimes(0.25, two)
-    simetimes1 = iaa.Sometimes(0.5,one)
-    seq = iaa.Sequential([three,simetimes2,simetimes1],random_order=True,)
-    images_aug = seq(images=img)
-    return images_aug[0]
+train_transforms = A.Compose(
+    [A.HorizontalFlip(p=0.3),
+     A.RandomBrightnessContrast(p=0.1),
+     A.OneOf([A.ShiftScaleRotate(rotate_limit=18, p=1, border_mode=cv.BORDER_CONSTANT),
+              A.IAAAffine(shear=10, p=1, mode="constant"),
+              #A.Perspective(scale=(0.05, 0.15), keep_size=True, pad_mode=0, pad_val=0,
+               #             mask_pad_val=0, fit_output=False, interpolation=1, always_apply=False, p=1),
+              ],p=1.0,),
+     A.OneOf([
+              A.FancyPCA (alpha=0.1, always_apply=False, p=1),
+              A.Blur(p=1),
+              A.ToGray(p=0.8),
+              A.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1, p=1),
+              A.ChannelDropout((1,1),fill_value=0,always_apply=False,p=1),
+              ],p=0.3,),
+     A.OneOf([#A.GaussNoise (var_limit=(10.0, 50.0), mean=0, per_channel=True, always_apply=False, p=0.5),
+              A.Equalize (mode='cv', by_channels=True, mask=None, mask_params=(), always_apply=False, p=0.8),
+              A.MotionBlur(blur_limit=4,p=1),
+              ],p=0.1,)
+     ])
