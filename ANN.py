@@ -158,8 +158,8 @@ class Ann:
             print(f"\n epoch: {epoch_ndx}")
             if decay_learning:
                 self.lr_schedule(epoch_ndx)
-            #trn_loss = self.training(epoch_ndx, self.train_dl)
-            #self.all_training_loss.append(trn_loss.detach() / len(self.train_dl))
+            trn_loss = self.training(epoch_ndx, self.train_dl)
+            self.all_training_loss.append(trn_loss.detach() / len(self.train_dl))
             val_loss = self.validation(epoch_ndx, self.val_dl)
             self.all_val_loss.append(val_loss.detach() / len(self.val_dl))
         self.train_data.update_database()
@@ -210,7 +210,7 @@ class Ann:
                torch.max(F.softmax(logits_g.detach(), dim=1), 1)[1]
 
 
-a = Ann(batch_size=30, epochs=1, lr=0.0001, l2=0.001)
+a = Ann(batch_size=30, epochs=20, lr=0.0001, l2=0.001)
 a.main()
 #a.save_model()
 #traced_cell = torch.jit.trace(a.model, torch.rand(1,3,160,160).to(a.device))
