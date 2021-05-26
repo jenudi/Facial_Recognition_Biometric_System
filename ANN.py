@@ -158,8 +158,8 @@ class Ann:
             print(f"\n epoch: {epoch_ndx}")
             if decay_learning:
                 self.lr_schedule(epoch_ndx)
-            trn_loss = self.training(epoch_ndx, self.train_dl)
-            self.all_training_loss.append(trn_loss.detach() / len(self.train_dl))
+            #trn_loss = self.training(epoch_ndx, self.train_dl)
+            #self.all_training_loss.append(trn_loss.detach() / len(self.train_dl))
             val_loss = self.validation(epoch_ndx, self.val_dl)
             self.all_val_loss.append(val_loss.detach() / len(self.val_dl))
         print("Finished")
@@ -189,8 +189,10 @@ class Ann:
                 self.val_loss += loss
                 losses.append(loss.item())
                 if (epoch_ndx + 1) % self.epochs == 0:
-                    self.train_data.y_pred = [int(i) for i in pred]
-                    self.train_data.y_pred_proba = [round(float(i), 2) for i in proba]
+                    for i in pred:
+                        self.train_data.y_pred.append(int(i))
+                    for i in proba:
+                        self.train_data.y_pred_proba.append(round(float(i), 2))
             self.scheduler.step(sum(losses) / len(losses))
         return self.val_loss
 
