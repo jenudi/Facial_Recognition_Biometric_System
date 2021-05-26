@@ -207,7 +207,8 @@ class Ann:
                torch.max(F.softmax(logits_g.detach(), dim=1), 1)[1]
 
 
-a = Ann(batch_size=30, epochs=1, lr=0.0001, l2=0.001).main()
+a = Ann(batch_size=30, epochs=1, lr=0.0001, l2=0.001)
+a.main()
 #a.save_model()
 #traced_cell = torch.jit.trace(a.model, torch.rand(1,3,160,160).to(a.device))
 #traced_cell.save('drive/MyDrive/amd/ann_model.zip')
