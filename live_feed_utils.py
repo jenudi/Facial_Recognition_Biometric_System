@@ -5,8 +5,7 @@ from DB_utils import *
 from DB import db
 import cv2 as cv
 import os
-import pickle
-from datetime import datetime,date
+from datetime import datetime
 from bson.son import SON
 import time
 import torch.nn as nn
@@ -21,8 +20,8 @@ id_to_name_dict_load = pickle.load(open("dict_cls2name.pickle", "rb"))
 
 class LiveFeed:
 
-    face_recognition_threshold = 0
-    save_image_in_db_threshold=0
+    face_recognition_threshold=0.9
+    save_image_in_db_threshold=0.95
 
 
     def __init__(self,db):
