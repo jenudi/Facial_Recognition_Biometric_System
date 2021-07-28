@@ -4,7 +4,7 @@ from torch.utils.data import WeightedRandomSampler
 import torch.optim as optim
 from torch.nn import functional as F
 from images_classes import *
-from aug import *
+from augmentation import *
 from tqdm import tqdm
 import torch
 from PIL import Image, ImageFile

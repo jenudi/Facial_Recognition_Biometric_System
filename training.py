@@ -1,6 +1,6 @@
 import pandas as pd
 from tqdm import tqdm
-from DB import db
+from database import database
 
 
 class Train:
@@ -14,18 +14,18 @@ class Train:
         self.y_pred_proba = list()
 
     def make_training_sets(self):
-        for i, v in enumerate(db.employees_collection.find({"pic num": { '$gt': 3}},
-                                                           {'images directory path': 1, "pic num": 1})):
-            self.worker_id_to_cls[i] = (v['_id'], v['images directory path'], v['pic num'])
+        for i, v in enumerate(database.employees_collection.find({"number of images": {'$gt': 3}},
+                                                                 {'images directory path': 1, "number of images": 1})):
+            self.worker_id_to_cls[i] = (v['_id'], v['images directory path'], v['number of images'])
         self.len_train = len(self.worker_id_to_cls)
         for key in self.worker_id_to_cls.keys():
-            db.employees_collection.update_one({'_id': self.worker_id_to_cls[key][0]},
-                                           {"$set": {"model_cls": key}})
+            database.employees_collection.update_one({'_id': self.worker_id_to_cls[key][0]},
+                                                     {"$set": {"model class": key}})
 
         loop = tqdm(range(self.len_train), position=0, leave=True)
         for i in loop:
             id_num = self.worker_id_to_cls[i][0]
-            cur = db.images_collection.find({"employee id": id_num}, {'face indexes': 1})
+            cur = database.images_collection.find({"employee id": id_num}, {'face indexes': 1})
 
             self.val = self.val.append(
                 {'path': self.worker_id_to_cls[i][1] + '/' + cur[0]['_id'],'class': i,
@@ -41,8 +41,8 @@ class Train:
     def update_database(self):
         for i, v in enumerate(self.y_pred):
             if v == self.val['class'][i]:
-                db.employees_collection.update_one({"model_cls": self.val['class'][i]},
-                                               {"$set": {"accuracy": self.y_pred_proba[i]}})
+                database.employees_collection.update_one({"model class": self.val['class'][i]},
+                                                         {"$set": {"accuracy": self.y_pred_proba[i]}})
 
     def check_accuracy(self, threshold):
         tp, fp, fn, tn = 0, 0, 0, 0

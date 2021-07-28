@@ -6,7 +6,7 @@ import cv2 as cv
 
 if __name__ == "__main__":
 
-    live_feed = LiveFeed(db)
+    live_feed = LiveFeed(database)
     #live_feed.update_employee_entry_today_by_db()
     #live_feed.update_id_to_name_dict_by_db()
 

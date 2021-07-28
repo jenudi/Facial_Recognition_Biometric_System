@@ -1,8 +1,8 @@
 from images_classes import *
 from torch.nn import functional as F
 import torch
-from DB_utils import *
-from DB import db
+from database import *
+from database import database
 import cv2 as cv
 import os
 from datetime import datetime
@@ -36,6 +36,7 @@ class LiveFeed:
         self.number_of_faces_detected = 0
         self.number_of_face_not_detected = 0
 
+
     def update_employee_entry_today_by_db(self):
         entry_today_query_find = SON(
             {"date": SON({"year": self.date.year, "month": self.date.month, "day": self.date.day}),
@@ -46,11 +47,13 @@ class LiveFeed:
             employee_id = entry["employee id"]
             self.employees_entry_today[employee_id - 1] = True
 
+
     def update_id_to_name_dict_by_db(self):
         employees_id_names_query=self.db.employees_collection.find({},{"_id":1,"name":1})
         self.id_to_name_dict=dict()
         for employee in employees_id_names_query:
             self.id_to_name_dict[employee["_id"]]=employee["name"]
+
 
     def register_entry(self, id_detected, date=None, time=datetime.now().time(), override=False):
         if date is None:
@@ -137,7 +140,6 @@ class CapturedFrame(ImageInSet):
     ann_model = NewNet(num_classes=len(id_to_name_dict_load.keys()))
     ann_model.load_state_dict(torch.load('ann_model.pth',map_location=torch.device("cpu")))
 
-    #knn_model=pickle.load(open("knn_model.pkl","rb"))
 
     def __init__(self,values):
         self.values=values
@@ -148,6 +150,7 @@ class CapturedFrame(ImageInSet):
         self.face_detected=False
         self.id_detected=None
         self.recognition_probability=None
+
 
     def set_face_image(self,live_feed):
         self.face_indexes=self.get_face_indexes()
@@ -161,27 +164,24 @@ class CapturedFrame(ImageInSet):
         else:
             live_feed.number_of_face_not_detected += 1
 
+
     def identify(self,model):
         if not self.face_detected:
             raise FrameException("face must be detected in order to perform identification")
-        if model=="ann":
-            img = self.norm_without_aug()
-            with torch.no_grad():
-                CapturedFrame.ann_model.eval()
-                output = CapturedFrame.ann_model(img)
-            self.recognition_probability=float(torch.max(F.softmax(output,dim=1),1)[0].item())
-            self.id_detected = int(torch.max(F.softmax(output, dim=1), 1)[1].item())
-        elif model=="knn":
-            self.face_image.augmentate()
-            face_embedding=self.face_image.get_embedding(None,as_numpy=True)
-            self.id_detected = int(CapturedFrame.knn_model.predict([face_embedding])[0])
-            self.recognition_probability = float(CapturedFrame.knn_model.predict_proba([face_embedding])[0][self.id_detected])
+        img = self.norm_without_aug()
+        with torch.no_grad():
+            CapturedFrame.ann_model.eval()
+            output = CapturedFrame.ann_model(img)
+        self.recognition_probability=float(torch.max(F.softmax(output,dim=1),1)[0].item())
+        self.id_detected = int(torch.max(F.softmax(output, dim=1), 1)[1].item())
         print("recognition probability: " + str(self.recognition_probability))
+
 
     def set_name(self,id_to_name_dict):
         if self.id_detected is None:
             raise FrameException("id must be detected in order to set name")
         self.name=id_to_name_dict[self.id_detected]
+
 
     def save_image_to_db(self,db,number_of_employee_images=None):
         if number_of_employee_images is None:

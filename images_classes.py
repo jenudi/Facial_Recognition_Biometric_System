@@ -1,5 +1,5 @@
 import cv2 as cv
-from aug import *
+from augmentation import *
 import torch
 import numpy as np
 from random import randint,uniform
