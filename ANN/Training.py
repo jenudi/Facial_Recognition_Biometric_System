@@ -1,9 +1,12 @@
 import pandas as pd
 from tqdm import tqdm
-from database import database
+from database.Database import database
 
 
-class Train:
+class Training:
+
+    MINIMUM_NUMBER_OF_IMAGES_FOR_MODEL=4
+
     def __init__(self):
         self.worker_id_to_cls = dict()
         self.len_train = None
@@ -14,7 +17,7 @@ class Train:
         self.y_pred_proba = list()
 
     def make_training_sets(self):
-        for i, v in enumerate(database.employees_collection.find({"number of images": {'$gt': 3}},
+        for i, v in enumerate(database.employees_collection.find({"number of images": {'$gte': Training.MINIMUM_NUMBER_OF_IMAGES_FOR_MODEL}},
                                                                  {'images directory path': 1, "number of images": 1})):
             self.worker_id_to_cls[i] = (v['_id'], v['images directory path'], v['number of images'])
         self.len_train = len(self.worker_id_to_cls)
@@ -42,7 +45,7 @@ class Train:
         for i, v in enumerate(self.y_pred):
             if v == self.val['class'][i]:
                 database.employees_collection.update_one({"model class": self.val['class'][i]},
-                                                         {"$set": {"accuracy": self.y_pred_proba[i]}})
+                                                         {"$set": {"model accuracy": self.y_pred_proba[i]}})
 
     def check_accuracy(self, threshold):
         tp, fp, fn, tn = 0, 0, 0, 0

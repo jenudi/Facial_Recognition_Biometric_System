@@ -1,4 +1,4 @@
-from images_classes import *
+from image.ImageInSet import *
 import pickle
 import pandas as pd
 import os

@@ -1,8 +1,6 @@
-from images_classes import *
+from image.ImageInSet import *
 import pandas as pd
 import os
-import shutil
-import math
 import pickle
 
 

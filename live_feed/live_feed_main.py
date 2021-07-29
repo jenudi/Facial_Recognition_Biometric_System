@@ -1,7 +1,7 @@
-from live_feed_utils import *
-import numpy as np
+from live_feed.LiveFeed import *
+from image.CapturedFrame import *
 import cv2 as cv
-
+from datetime import time
 
 
 if __name__ == "__main__":
@@ -36,7 +36,7 @@ if __name__ == "__main__":
         if frame_image.face_detected:
             print("face detected number "+ str(live_feed.number_of_faces_detected))
             frame_image.face_image.save(os.path.join(faces_detected_dir,str(live_feed.number_of_faces_detected)+".jpg"))
-            frame_image.identify("ann")
+            frame_image.identify()
             end = time.time()
             if frame_image.recognition_probability>=live_feed.face_recognition_threshold:
                 live_feed.number_of_faces_recognized+=1

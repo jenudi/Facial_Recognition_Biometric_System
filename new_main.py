@@ -1,4 +1,4 @@
-from images_classes import *
+from image.ImageInSet import *
 import pandas as pd
 import os
 import pickle
@@ -46,12 +46,9 @@ def make_df(max_pics=10):    # make only df and insert to mongo -> check for val
 
 
 df,cls2name = make_df(6)
-df.to_pickle("db_df.pkl")
-pickle.dump(cls2name,open("dict_cls2name.pkl","wb"))
+df.to_pickle("database\\db_df.pkl")
+pickle.dump(cls2name,open("cls2name_dict.pkl","wb"))
 
 
 #with open('drive/MyDrive/amd/dict_cls2name.pickle', 'wb') as handle:
  #   pickle.dump(dict_cls2name, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-
-#%%

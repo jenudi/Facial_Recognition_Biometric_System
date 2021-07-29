@@ -1,5 +1,5 @@
-from images_classes import *
-from augmentation import *
+from image.ImageInSet import *
+from image.augmentation import *
 import os
 import shutil
 import math

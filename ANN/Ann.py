@@ -3,12 +3,12 @@ from torch.utils.data import Dataset, DataLoader
 from torch.utils.data import WeightedRandomSampler
 import torch.optim as optim
 from torch.nn import functional as F
-from images_classes import *
-from augmentation import *
+from image.ImageInSet import *
+from image.augmentation import *
 from tqdm import tqdm
 import torch
-from PIL import Image, ImageFile
-from training import Train
+from PIL import Image
+from ANN.Training import Training
 
 
 class NewNet(nn.Module):
@@ -76,9 +76,9 @@ class FRBSDataset(Dataset):
         augmentations = self.norm(image=img)
         img = augmentations["image"]
 
-        cls = torch.tensor(self.values[index][1])
+        model_class = torch.tensor(self.values[index][1])
 
-        return img, cls
+        return img, model_class
 
     def __len__(self):
         return len(self.values)
@@ -87,7 +87,7 @@ class FRBSDataset(Dataset):
 class Ann:
     def __init__(self, batch_size=100, epochs=10, lr=1e-3, l2=0.01):
 
-        self.train_data = Train()
+        self.train_data = Training()
         self.sampler = self.create_sampler()
         self.batch_size = batch_size
         self.epochs = epochs
@@ -198,24 +198,22 @@ class Ann:
         return self.val_loss
 
     def compute_batch_loss(self, batch_ndx, batch_tup, batch_size):
-        input, cls = batch_tup
+        input, model_class = batch_tup
         input = input.to(self.device, dtype=torch.float)
-        cls = torch.reshape(cls, (-1,))
-        cls = cls.type(torch.LongTensor)
-        cls = cls.to(self.device)
+        model_class = torch.reshape(model_class, (-1,))
+        model_class = model_class.type(torch.LongTensor)
+        model_class = model_class.to(self.device)
         logits_g = self.model(input)
         loss_func = nn.CrossEntropyLoss(reduction='none')  # weight=self.class_weights
-        loss_g = loss_func(logits_g, cls)
+        loss_g = loss_func(logits_g, model_class)
         return loss_g.mean(), torch.max(F.softmax(logits_g.detach(), dim=1), 1)[0], \
                torch.max(F.softmax(logits_g.detach(), dim=1), 1)[1]
 
 
-a = Ann(batch_size=30, epochs=20, lr=0.0001, l2=0.001)
-a.main()
-#a.save_model()
-#traced_cell = torch.jit.trace(a.model, torch.rand(1,3,160,160).to(a.device))
-#traced_cell.save('drive/MyDrive/amd/ann_model.zip')
+if __name__ == "__main__":
 
-#%%
-
-
+    a = Ann(batch_size=30, epochs=20, lr=0.0001, l2=0.001)
+    a.main()
+    #a.save_model()
+    #traced_cell = torch.jit.trace(a.model, torch.rand(1,3,160,160).to(a.device))
+    #traced_cell.save('drive/MyDrive/amd/ann_model.zip')

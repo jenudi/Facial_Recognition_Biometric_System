@@ -1,12 +1,10 @@
-from images_classes import *
-import pandas as pd
-import os
+from ANN.Training import *
+from database.Employee import *
 import pickle
 from datetime import datetime
 from random import randint
-from math import floor
 from bson.son import SON
-from pymongo import MongoClient,errors
+from pymongo import MongoClient
 
 
 #name_to_id_dict = pickle.load(open("name_to_id_dict.pkl", "rb"))
@@ -17,9 +15,6 @@ from pymongo import MongoClient,errors
 
 class Database:
 
-    MINIMUM_NUMBER_OF_IMAGES_FOR_MODEL = 4
-    BRANCHES=["TA", "SF", "TO", "BN"]
-
 
     def __init__(self):
         self.__client = MongoClient('mongodb://localhost:27017/')
@@ -28,6 +23,34 @@ class Database:
             self.employees_collection = self.__database["employees"]
             self.images_collection = self.__database["images"]
             self.attendance_collection = self.__database["attendance"]
+
+
+    def create_database_from_dataframe(self,db_df,id_to_name_dict):
+        employees_list = list()
+        images_list = list()
+        attendance_list = list()
+
+        for index in range(db_df.shape[0]):
+
+            employee = Employee(index, id_to_name_dict[index], id_to_name_dict[index],
+                                '/'.join(db_df.iloc[index]['path'][0].split('\\')[:-1]), int(db_df['pic_num'][index]))
+
+            employees_list.append(database.make_employee_doc(employee))
+
+            for path, face_indexes in zip(db_df.iloc[index]['path'], db_df.iloc[index]['indexes']):
+                images_list.append(database.make_image_doc(path, employee.employee_id, list(map(float, face_indexes))))
+
+            attendance_list.append(database.make_attendance_doc(employee.employee_id, 2021, 1, 1))
+            attendance_list.append(
+                database.make_attendance_doc(employee.employee_id, 2021, 1, 2, (8, randint(0, 59), randint(0, 59)),
+                                             (17, randint(0, 59), randint(0, 59))))
+
+        for employee_index in range(round(len(employees_list) / 10)):
+            employees_list[employee_index]["admin"] = True
+
+        self.employees_collection.insert_many(employees_list)
+        self.images_collection.insert_many(images_list)
+        self.attendance_collection.insert_many(attendance_list)
 
 
     def make_image_doc(self, path, employee_id, face_indexes,recognized_by_model=False):
@@ -56,23 +79,22 @@ class Database:
             })
 
 
-    def make_employee_doc(self, employee_id, employee_number, name, images_directory_path,
-                          number_of_images,branch=None,model_accuracy=None,
+    def make_employee_doc(self, employee,branch=None,model_accuracy=None,
                           model_class=None,admin=False):
         if branch==None:
-            branch=Database.BRANCHES[randint(0,3)]
+            branch=Employee.get_random_branch()
         return \
             SON({
-                "_id": employee_id,
-                "employee number": employee_number,
-                "name": name,
-                "images directory path": images_directory_path,
+                "_id": employee.employee_id,
+                "employee number": employee.employee_number,
+                "name": employee.name,
+                "images directory path": employee.images_directory_path,
                 "branch": branch,
                 "admin": admin,
-                "number of images": number_of_images,
+                "number of images": employee.number_of_images,
                 "model accuracy": model_accuracy,
                 "model class": model_class,
-                "included in model":number_of_images>=Database.MINIMUM_NUMBER_OF_IMAGES_FOR_MODEL
+                "included in model": employee.number_of_images >= Training.MINIMUM_NUMBER_OF_IMAGES_FOR_MODEL
             })
 
 
@@ -97,34 +119,6 @@ database = Database()
 
 if __name__ == "__main__":
 
-
-    id_to_name_dict = pickle.load(open("dict_cls2name.pkl", "rb"))
-    db_df = pickle.load(open(os.path.join(os.getcwd(), "db_df.pkl"), "rb"))
-
-    employees = list()
-    images = list()
-    attendance = list()
-
-    for index in range(db_df.shape[0]):
-
-        # employee_id=int(db_df.iloc[index]['employee_id'])
-        employee_id = index
-        name = id_to_name_dict[index]
-
-        employees.append(database.make_employee_doc(employee_id, employee_id, name,
-                                                    '/'.join(db_df.iloc[index]['path'][0].split('\\')[:-1]),
-                                                    int(db_df['pic_num'][index])))
-
-        for path, face_indexes in zip(db_df.iloc[index]['path'], db_df.iloc[index]['indexes']):
-            images.append(database.make_image_doc(path, employee_id, list(map(float, face_indexes))))
-
-        attendance.append(database.make_attendance_doc(employee_id, 2021, 1, 1))
-        attendance.append(database.make_attendance_doc(employee_id, 2021, 1, 2, (8, randint(0, 59), randint(0, 59)),
-                                                       (17, randint(0, 59), randint(0, 59))))
-
-    for employee_index in range(round(len(employees) / 10)):
-        employees[employee_index]["admin"] = True
-
-    database.employees_collection.insert_many(employees)
-    database.images_collection.insert_many(images)
-    database.attendance_collection.insert_many(attendance)
+    db_df = pickle.load(open("db_df.pkl", "rb"))
+    id_to_name_dict = pickle.load(open("../dict_cls2name.pkl", "rb"))
+    database.create_database_from_dataframe(db_df,id_to_name_dict)
