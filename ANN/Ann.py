@@ -1,14 +1,15 @@
+from ANN.Training import Training
+from image.ImageInSet import *
+from image.augmentation import *
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data import WeightedRandomSampler
 import torch.optim as optim
 from torch.nn import functional as F
-from image.ImageInSet import *
-from image.augmentation import *
 from tqdm import tqdm
 import torch
 from PIL import Image
-from ANN.Training import Training
+
 
 
 class NewNet(nn.Module):
