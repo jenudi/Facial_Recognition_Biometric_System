@@ -5,8 +5,8 @@ class Employee:
 
     BRANCHES=["TA", "SF", "TO", "BN"]
 
-    def __init__(self,employee_id,employee_number,name,images_directory_path, number_of_images):
-        self.employee_id=employee_id
+    def __init__(self,id,employee_number,name,images_directory_path, number_of_images):
+        self.id=id
         self.employee_number=employee_number
         self.name=name
         self.images_directory_path=images_directory_path

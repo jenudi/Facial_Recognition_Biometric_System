@@ -31,14 +31,14 @@ class Database:
             employees_list.append(database.make_employee_doc(employee))
 
             for path, face_indexes in zip(db_df.iloc[index]['path'], db_df.iloc[index]['indexes']):
-                images_list.append(database.make_image_doc(path, employee.employee_id, list(map(float, face_indexes))))
+                images_list.append(database.make_image_doc(path, employee, list(map(float, face_indexes))))
 
-            attendance_list.append(database.make_attendance_doc(employee.employee_id, 2021, 1, 1))
+            attendance_list.append(database.make_attendance_doc(employee, 2021, 1, 1))
             attendance_list.append(
-                database.make_attendance_doc(employee.employee_id, 2021, 1, 2, (8, randint(0, 59), randint(0, 59)),
+                database.make_attendance_doc(employee, 2021, 1, 2, (8, randint(0, 59), randint(0, 59)),
                                              (17, randint(0, 59), randint(0, 59))))
 
-        for employee_index in range(round(len(employees_list) / 10)):
+        for employee_index in range(0,len(employees_list),100):
             employees_list[employee_index]["admin"] = True
 
         self.employees_collection.insert_many(employees_list)
@@ -46,36 +46,10 @@ class Database:
         self.attendance_collection.insert_many(attendance_list)
 
 
-    def make_image_doc(self, path, employee_id, face_indexes,recognized_by_model=False):
-        now = datetime.now()
-        return \
-            SON({
-                "_id": path.split('\\')[-1],
-                "employee id": employee_id,
-                "face indexes": face_indexes,
-                "recognized by model": recognized_by_model,
-                "uploaded": SON({"date": SON({"year": now.year, "month": now.month, "day": now.day}),
-                                 "time": SON({"hour": now.hour, "minute": now.minute, "second": now.second})})
-            })
-
-
-    def make_attendance_doc(self, employee_id, year, month, day, entry_time=(8,0,0), exit_time=(17,0,0)):
-        hours, minutes, seconds = Database.calculate_total(entry_time, exit_time)
-        return \
-            SON({
-                "_id": '-'.join([str(employee_id), str(year), str(month), str(day)]),
-                "employee id": employee_id,
-                "date": SON({"year": year, "month": month, "day": day}),
-                "entry": SON({"hour": entry_time[0], "minute": entry_time[1], "second": entry_time[2]}),
-                "exit": SON({"hour": exit_time[0], "minute": exit_time[1], "second": exit_time[2]}),
-                "total": SON({"hours": hours, "minutes": minutes, "seconds": seconds})
-            })
-
-
     def make_employee_doc(self, employee):
         return \
             SON({
-                "_id": employee.employee_id,
+                "_id": employee.id,
                 "employee number": employee.employee_number,
                 "name": employee.name,
                 "images directory path": employee.images_directory_path,
@@ -85,6 +59,32 @@ class Database:
                 "model accuracy": employee.model_accuracy,
                 "model class": employee.model_class,
                 "included in model": employee.number_of_images >= Training.MINIMUM_NUMBER_OF_IMAGES_FOR_MODEL
+            })
+
+
+    def make_image_doc(self, path, employee, face_indexes,recognized_by_model=False):
+        now = datetime.now()
+        return \
+            SON({
+                "_id": path.split('\\')[-1],
+                "employee id": employee.id,
+                "face indexes": face_indexes,
+                "recognized by model": recognized_by_model,
+                "uploaded": SON({"date": SON({"year": now.year, "month": now.month, "day": now.day}),
+                                 "time": SON({"hour": now.hour, "minute": now.minute, "second": now.second})})
+            })
+
+
+    def make_attendance_doc(self, employee, year, month, day, entry_time=(8,0,0), exit_time=(17,0,0)):
+        hours, minutes, seconds = Database.calculate_total(entry_time, exit_time)
+        return \
+            SON({
+                "_id": '-'.join([str(employee.id), str(year), str(month), str(day)]),
+                "employee id": employee.id,
+                "date": SON({"year": year, "month": month, "day": day}),
+                "entry": SON({"hour": entry_time[0], "minute": entry_time[1], "second": entry_time[2]}),
+                "exit": SON({"hour": exit_time[0], "minute": exit_time[1], "second": exit_time[2]}),
+                "total": SON({"hours": hours, "minutes": minutes, "seconds": seconds})
             })
 
 
