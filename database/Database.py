@@ -7,14 +7,7 @@ from bson.son import SON
 from pymongo import MongoClient
 
 
-#name_to_id_dict = pickle.load(open("name_to_id_dict.pkl", "rb"))
-#id_to_name_dict = {value: key for key, value in name_to_id_dict.items()}
-
-#id_to_name_dict = pickle.load(open("dict_cls2name.pkl", "rb"))
-
-
 class Database:
-
 
     def __init__(self):
         self.__client = MongoClient('mongodb://localhost:27017/')
@@ -32,7 +25,7 @@ class Database:
 
         for index in range(db_df.shape[0]):
 
-            employee = Employee(index, id_to_name_dict[index], id_to_name_dict[index],
+            employee = Employee(index, index, id_to_name_dict[index],
                                 '/'.join(db_df.iloc[index]['path'][0].split('\\')[:-1]), int(db_df['pic_num'][index]))
 
             employees_list.append(database.make_employee_doc(employee))
@@ -67,7 +60,7 @@ class Database:
 
 
     def make_attendance_doc(self, employee_id, year, month, day, entry_time=(8,0,0), exit_time=(17,0,0)):
-        hours, minutes, seconds = self.calculate_total(entry_time, exit_time)
+        hours, minutes, seconds = Database.calculate_total(entry_time, exit_time)
         return \
             SON({
                 "_id": '-'.join([str(employee_id), str(year), str(month), str(day)]),
@@ -79,21 +72,18 @@ class Database:
             })
 
 
-    def make_employee_doc(self, employee,branch=None,model_accuracy=None,
-                          model_class=None,admin=False):
-        if branch==None:
-            branch=Employee.get_random_branch()
+    def make_employee_doc(self, employee):
         return \
             SON({
                 "_id": employee.employee_id,
                 "employee number": employee.employee_number,
                 "name": employee.name,
                 "images directory path": employee.images_directory_path,
-                "branch": branch,
-                "admin": admin,
+                "branch": employee.branch,
+                "admin": employee.admin,
                 "number of images": employee.number_of_images,
-                "model accuracy": model_accuracy,
-                "model class": model_class,
+                "model accuracy": employee.model_accuracy,
+                "model class": employee.model_class,
                 "included in model": employee.number_of_images >= Training.MINIMUM_NUMBER_OF_IMAGES_FOR_MODEL
             })
 
@@ -120,5 +110,5 @@ database = Database()
 if __name__ == "__main__":
 
     db_df = pickle.load(open("db_df.pkl", "rb"))
-    id_to_name_dict = pickle.load(open("../dict_cls2name.pkl", "rb"))
+    id_to_name_dict = pickle.load(open("../id_to_name_dict.pkl", "rb"))
     database.create_database_from_dataframe(db_df,id_to_name_dict)

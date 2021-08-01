@@ -2,12 +2,8 @@ from database.Database import *
 from datetime import datetime
 from bson.son import SON
 
-#name_to_id_dict = pickle.load(open("name_to_id_dict.pkl", "rb"))
-#id_to_name_dict_load = {value: key for key, value in name_to_id_dict.items()}
 
-#id_to_name_dict_load = pickle.load(open("dict_cls2name.pkl", "rb"))
-
-id_to_name_dict_load = pickle.load(open("..\\cls2name_dict.pkl", "rb"))
+id_to_name_dict_load = pickle.load(open("..\\id_to_name_dict.pkl", "rb"))
 
 class LiveFeed:
 

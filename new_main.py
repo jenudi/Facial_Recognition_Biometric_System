@@ -5,7 +5,7 @@ import pickle
 from tqdm import tqdm
 
 
-def make_df(max_pics=10):    # make only df and insert to mongo -> check for valid -> print not the valid -> split to trn/val -> train the valids
+def make_df(max_pics=10): # make only df and insert to mongo -> check for valid -> print not the valid -> split to trn/val -> train the valids
     root_dir=os.getcwd()
     directory_name = '/dataset'
     #dataset_dir = os.path.join(root_dir, input("please enter the dataset directory path")) \
@@ -45,6 +45,8 @@ def make_df(max_pics=10):    # make only df and insert to mongo -> check for val
     return df.copy(),dict_cls2name
 
 
-df,cls2name = make_df(6)
-df.to_pickle("database\\db_df.pkl")
-pickle.dump(cls2name,open("cls2name_dict.pkl","wb"))
+if __name__ == "__main__":
+
+    df,cls2name = make_df(6)
+    df.to_pickle("database\\db_df.pkl")
+    pickle.dump(cls2name,open("id_to_name_dict.pkl","wb"))
