@@ -19,7 +19,7 @@ def make_df(max_pics=10): # make only df and insert to mongo -> check for valid 
         files = os.listdir(dir_path)
         images_paths = [os.path.join(dir_path, file) for file in files if ((len(file.split('.')) == 2) and (file.split('.')[1] in ['jpg', 'jpeg', 'png']))]
         for img in images_paths:
-            df = df.append({'path': img,'name':dir}, ignore_index=True)
+            df = df.append({'path': img,'name':" ".join(dir.split("_"))}, ignore_index=True)
 
     df = df.groupby(by='name',as_index=False).agg({'path': lambda x: list(x)})
     dict_cls2name = dict(zip([i for i in range(len(df))], df['name']))
