@@ -11,10 +11,10 @@ class Employee:
         self.name=name
         self.images_directory_path=images_directory_path
         self.number_of_images=number_of_images
-        self.branch = Employee.get_random_branch()
-        self.model_accuracy = 0
-        self.model_class = -1
-        self.admin = False
+        self.branch=Employee.get_random_branch()
+        self.model_accuracy=0.0
+        self.model_class=-1
+        self.admin=False
 
     @classmethod
     def get_random_branch(cls):
