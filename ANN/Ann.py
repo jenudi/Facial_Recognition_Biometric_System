@@ -11,7 +11,6 @@ import torch
 from PIL import Image
 
 
-
 class NewNet(nn.Module):
     def __init__(self, num_classes=1):
         super(NewNet, self).__init__()
