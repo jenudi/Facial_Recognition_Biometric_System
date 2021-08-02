@@ -1,4 +1,12 @@
+from enum import Enum
 from random import randint
+
+
+class EmployeeType(Enum):
+    UNDEFINED=0
+    STANDARD=1
+    ADMIN=2
+    CTO=3
 
 
 class Employee:
@@ -14,8 +22,9 @@ class Employee:
         self.branch=Employee.get_random_branch()
         self.model_accuracy=0.0
         self.model_class=-1
-        self.admin=False
+        self.employee_type=EmployeeType.STANDARD.value
 
     @classmethod
     def get_random_branch(cls):
         return cls.BRANCHES[randint(0,3)]
+

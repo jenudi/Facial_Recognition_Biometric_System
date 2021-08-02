@@ -30,6 +30,10 @@ class Database:
 
             employees_list.append(database.make_employee_doc(employee))
 
+            employees_list[0]["employee type"] = EmployeeType.CTO.value
+            for employee_index in range(1, len(employees_list), 100):
+                employees_list[employee_index]["employee type"] = EmployeeType.ADMIN.value
+
             for path, face_indexes in zip(db_df.iloc[index]['path'], db_df.iloc[index]['indexes']):
                 images_list.append(database.make_image_doc(path, employee, list(map(float, face_indexes))))
 
@@ -38,8 +42,6 @@ class Database:
                 database.make_attendance_doc(employee, 2021, 1, 2, (8, randint(0, 59), randint(0, 59)),
                                              (17, randint(0, 59), randint(0, 59))))
 
-        for employee_index in range(0,len(employees_list),100):
-            employees_list[employee_index]["admin"] = True
 
         self.employees_collection.insert_many(employees_list)
         self.images_collection.insert_many(images_list)
@@ -54,7 +56,7 @@ class Database:
                 "name": employee.name,
                 "images directory path": employee.images_directory_path,
                 "branch": employee.branch,
-                "admin": employee.admin,
+                "employee type": employee.employee_type,
                 "number of images": employee.number_of_images,
                 "model accuracy": employee.model_accuracy,
                 "model class": employee.model_class,
