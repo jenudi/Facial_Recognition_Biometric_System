@@ -15,13 +15,12 @@ class Database:
             self.__database = self.__client["biometric_system"]
             self.employees_collection = self.__database["employees"]
             self.images_collection = self.__database["images"]
-            self.attendance_collection = self.__database["attendance"]
-
+            self.attendances_collection = self.__database["attendances"]
 
     def create_database_from_dataframe(self,db_df,id_to_name_dict):
         employees_list = list()
         images_list = list()
-        attendance_list = list()
+        attendances_list = list()
 
         for index in range(db_df.shape[0]):
 
@@ -37,15 +36,15 @@ class Database:
             for path, face_indexes in zip(db_df.iloc[index]['path'], db_df.iloc[index]['indexes']):
                 images_list.append(database.make_image_doc(path, employee, list(map(float, face_indexes))))
 
-            attendance_list.append(database.make_attendance_doc(employee, 2021, 1, 1))
-            attendance_list.append(
+            attendances_list.append(database.make_attendance_doc(employee, 2021, 1, 1))
+            attendances_list.append(
                 database.make_attendance_doc(employee, 2021, 1, 2, (8, randint(0, 59), randint(0, 59)),
                                              (17, randint(0, 59), randint(0, 59))))
 
 
         self.employees_collection.insert_many(employees_list)
         self.images_collection.insert_many(images_list)
-        self.attendance_collection.insert_many(attendance_list)
+        self.attendances_collection.insert_many(attendances_list)
 
 
     def make_employee_doc(self, employee):
