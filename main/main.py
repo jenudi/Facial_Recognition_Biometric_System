@@ -49,4 +49,4 @@ if __name__ == "__main__":
 
     df,cls2name = make_df(6)
     df.to_pickle("database\\db_df.pkl")
-    pickle.dump(cls2name,open("id_to_name_dict.pkl","wb"))
+    pickle.dump(cls2name, open("id_to_name_dict.pkl", "wb"))
