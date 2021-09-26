@@ -1,5 +1,5 @@
-from ANN.Training import *
-from database.Employee import *
+from ann.training import *
+from database.employee import *
 import pickle
 from datetime import datetime
 from random import randint

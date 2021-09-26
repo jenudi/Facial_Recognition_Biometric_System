@@ -1,5 +1,5 @@
-from ANN.Training import Training
-from image.ImageInSet import *
+from ann.training import *
+from image.image_in_set import *
 from image.augmentation import *
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader

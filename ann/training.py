@@ -1,6 +1,6 @@
+from database.database import *
 import pandas as pd
 from tqdm import tqdm
-from database.Database import database
 
 
 class Training:

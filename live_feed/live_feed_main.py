@@ -1,5 +1,5 @@
-from live_feed.LiveFeed import *
-from image.CapturedFrame import *
+from live_feed.live_feed import *
+from image.captured_frame import *
 import cv2 as cv
 from datetime import time
 

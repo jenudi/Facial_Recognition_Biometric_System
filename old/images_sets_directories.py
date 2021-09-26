@@ -1,4 +1,4 @@
-from image.ImageInSet import *
+from image.image_in_set import *
 from image.augmentation import *
 import os
 import shutil

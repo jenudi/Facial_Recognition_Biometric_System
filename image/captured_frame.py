@@ -1,6 +1,6 @@
-from image.ImageInSet import *
-from ANN.Ann import *
-from live_feed.LiveFeed import *
+from image.image_in_set import *
+from ann.ann import *
+from live_feed.live_feed import *
 from pymongo import errors
 
 
@@ -9,7 +9,7 @@ class CapturedFrame(ImageInSet):
     #ann_model = InceptionResnetV1(classify=True, pretrained='vggface2', num_classes=len(id_to_name_dict_load.keys()))
     #ann_model.load_state_dict(torch.load("ann_model.pth",map_location=torch.device("cpu")))
     ann_model = NewNet(num_classes=len(id_to_name_dict_load.keys()))
-    ann_model.load_state_dict(torch.load('..\\ANN\\ann_model.pth',map_location=torch.device("cpu")))
+    ann_model.load_state_dict(torch.load('..\\ann\\ann_model.pth',map_location=torch.device("cpu")))
 
 
     def __init__(self,values):
