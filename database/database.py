@@ -57,7 +57,6 @@ class Database:
                 "branch": employee.branch,
                 "employee type": employee.employee_type,
                 "number of images": employee.number_of_images,
-                "model accuracy": employee.model_accuracy,
                 "model class": employee.model_class,
                 "included in model": employee.number_of_images >= Training.MINIMUM_NUMBER_OF_IMAGES_FOR_MODEL
             })
